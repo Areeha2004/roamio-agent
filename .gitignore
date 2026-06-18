@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Python virtual environment
+venv/
+.venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Vector store data
+chroma/
+*.faiss
+*.index
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
