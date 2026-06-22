@@ -20,3 +20,7 @@ chroma/
 .DS_Store
 .vscode/
 .idea/
+
+# Learning / scratch — kept local, not part of the shipped project
+practice/
+check_keys.py

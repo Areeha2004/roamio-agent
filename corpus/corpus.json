@@ -1,0 +1,153 @@
+[
+  {
+    "id": "hunza-valley",
+    "name": "Hunza Valley",
+    "region": "Gilgit-Baltistan",
+    "tags": ["mountains", "scenic", "adventure", "photography", "culture"],
+    "description": "Pakistan's most iconic mountain valley — dramatic Karakoram peaks, historic forts, and the turquoise Attabad Lake, reached via the Karakoram Highway.",
+    "recommended_trip_days": { "min": 3, "ideal": 5 },
+    "drive_times": {
+      "from_islamabad": { "min_hours": 14, "max_hours": 18, "note": "by road (KKH), usually split over 2 days with an overnight in Chilas or Gilgit" },
+      "from_gilgit": { "min_hours": 2.5, "max_hours": 3, "note": "via KKH" },
+      "nearest_airport": "Gilgit Airport (GIL), then ~3 hr drive; flights weather-dependent"
+    },
+    "open_months": [4, 5, 6, 7, 8, 9, 10],
+    "best_season": {
+      "months": "April to October",
+      "highlights": "Cherry blossom in early April; lush green summers; golden autumn foliage in October",
+      "avoid": "December to February (heavy snow, KKH sections can close)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [3000,15000],
+      "food_pkr_per_day": [1500, 3000],
+      "local_transport_pkr_per_day": [3000, 6000],
+      "notes": "Karimabad has the widest range from guesthouses to boutique hotels"
+    },
+    "permits": "CNIC sufficient for Pakistani nationals. Foreigners do not need a permit for Hunza itself, but an NOC may be required for restricted border zones (e.g. Khunjerab/Shimshal area).",
+    "stays": ["Karimabad (central, most options)", "Aliabad", "Duikar/Eagle's Nest for sunrise views"],
+    "activities": ["Baltit Fort", "Altit Fort", "Attabad Lake (boating)", "Passu Cones viewpoint", "Eagle's Nest sunrise", "Khunjerab Pass day trip","Hopper Glacier",
+"Borith Lake",
+"Hussaini Suspension Bridge"],
+    "tips": ["Carry cash — ATMs are scarce and unreliable", "Book ahead in peak season (April blossom, summer)", "Mobile signal is patchy; SCOM/Telenor work best", "Days are cold even in summer — pack layers","Fuel up before entering remote valleys",
+"Carry warm clothing even in July"]
+  },
+
+  {
+    "id": "skardu",
+    "name": "Skardu",
+    "region": "Gilgit-Baltistan",
+    "tags": ["mountains", "lakes", "desert", "trekking", "adventure", "photography"],
+    "description": "Gateway to the high Karakoram and K2 — alpine lakes, the vast Deosai plateau, cold deserts, and Balti forts, set on the Indus River.",
+    "recommended_trip_days": { "min": 3, "ideal": 6 },
+    "drive_times": {
+      "from_islamabad": { "min_hours": 14, "max_hours": 18, "note": "by road (KKH to Jaglot, then the Skardu road), usually split over 2 days with an overnight in Chilas" },
+      "from_gilgit": { "min_hours": 4, "max_hours": 7, "note": "via the Gilgit-Skardu road (Jaglot junction)" },
+      "nearest_airport": "Skardu International Airport (KDU); ~1 hr flight from Islamabad, but flights are highly weather-dependent and frequently cancelled"
+    },
+    "open_months": [4, 5, 6, 7, 8, 9, 10],
+    "best_season": {
+      "months": "April-October",
+      "highlights": "Deosai Plains open roughly Late June to September (wildflowers, golden marmots); clear lakes and pleasant valley weather in summer",
+      "avoid": "November to March (heavy snow, the Deosai route closes and the road in can be cut off)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [4000, 15000],
+      "food_pkr_per_day": [1500, 3500],
+      "local_transport_pkr_per_day": [4000, 8000],
+      "notes": "Jeep hire (4x4) for Deosai/Sheosar adds a notable cost; lakeside resorts like Shangrila sit at the high end"
+    },
+    "permits": "CNIC sufficient for Pakistani nationals in Skardu town and common spots (Shangrila, Deosai, Khaplu). Foreigners may need an NOC for restricted/high-altitude trekking zones (e.g. Concordia, K2 base camp, near the LoC).",
+    "stays": ["Skardu town (most hotels and services)", "Shangrila / Lower Kachura (lakeside resorts)", "Shigar or Khaplu (forts converted to heritage stays)"],
+    "activities": ["Shangrila / Lower Kachura Lake", "Upper Kachura Lake", "Deosai National Park & Sheosar Lake", "Shigar Fort", "Khaplu Palace", "Katpana Cold Desert (dunes)", "Manthokha Waterfall","Satpara Lake",
+"Sarfaranga Cold Desert",
+"Basho Valley"],
+    "tips": ["Carry cash — ATMs are limited and often out of service", "Don't rely on the Skardu flight; keep road time as a backup", "Hire a 4x4 with a local driver for Deosai — ordinary cars can't do the track", "Acclimatize before any high-altitude trek; Deosai sits above 4,000m","Keep one buffer day in your itinerary because flights are often delayed or cancelled."]
+  },
+
+  {
+    "id": "naran-kaghan",
+    "name": "Naran & Kaghan Valley",
+    "region": "Khyber Pakhtunkhwa",
+    "tags": ["mountains", "lakes", "scenic", "family", "adventure"],
+    "description": "The classic Kaghan Valley summer escape — alpine Lake Saif-ul-Malook, green meadows at Shogran, and the high Babusar Pass; hugely popular with families.",
+    "recommended_trip_days": { "min": 2, "ideal": 4 },
+    "drive_times": {
+      "from_islamabad": { "min_hours": 6, "max_hours": 9, "note": "via Mansehra and Balakot; mostly paved, slow above Kaghan" },
+      "nearest_airport": "Islamabad International Airport (ISB), then ~6-8 hr drive"
+    },
+    "open_months": [5, 6, 7, 8, 9, 10],
+    "best_season": {
+      "months": "May to October",
+      "highlights": "Lake Saif-ul-Malook and Babusar Pass open mid-summer (roughly July-August); lush green valleys and meadows",
+      "avoid": "November to April (heavy snow, Babusar Pass and the upper valley road closed)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [3000, 12000],
+      "food_pkr_per_day": [1200, 3000],
+      "local_transport_pkr_per_day": [3000, 7000],
+      "notes": "Jeep hire to Lake Saif-ul-Malook is a common extra cost; weekends in peak season are pricey"
+    },
+    "permits": "CNIC sufficient for Pakistani nationals; no special permits. Babusar Pass access is seasonal and weather-dependent.",
+    "stays": ["Naran town (most hotels)", "Shogran (forest resorts)", "Kaghan village", "Batakundi"],
+    "activities": ["Lake Saif-ul-Malook", "Babusar Pass", "Shogran & Siri Paye meadows", "Lulusar Lake", "Ansoo Lake trek","Lalazar Plateau","Kunhar River rafting"],
+    "tips": ["Hire a 4x4 jeep for the rough track up to Lake Saif-ul-Malook", "Carry warm clothing even in July — nights are cold", "Book ahead in July-August peak; weekends get very crowded", "Confirm Babusar Pass is open before planning to cross it","Fuel stations become sparse after Balakot—top up your tank before heading further north."]
+  },
+
+  {
+    "id": "swat-valley",
+    "name": "Swat Valley",
+    "region": "Khyber Pakhtunkhwa",
+    "tags": ["mountains", "green", "valleys", "family", "culture", "waterfalls", "heritage", "skiing"],
+    "description": "The 'Switzerland of Pakistan' — green valleys along the Swat River, Buddhist heritage, the upper resort of Kalam, and the ski slopes of Malam Jabba; accessible and family-friendly.",
+    "recommended_trip_days": { "min": 2, "ideal": 4 },
+    "drive_times": {
+      "from_islamabad": { "min_hours": 5, "max_hours": 7, "note": "via the M-1 motorway to Mardan, then up to Mingora; upper Swat (Kalam) adds 3-4 hrs" },
+      "nearest_airport": "Saidu Sharif Airport (SDT) near Mingora; limited flights, so most travel by road"
+    },
+    "open_months": [3, 4, 5, 6, 7, 8, 9, 10, 11],
+    "best_season": {
+      "months": "March to November",
+      "highlights": "Lush green valleys and the Swat River in spring-summer; Kalam and Mahodand Lake best June-September; Malam Jabba offers winter skiing (Dec-Feb)",
+      "avoid": "Deep winter for upper valleys like Kalam (heavy snow, roads can close)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [2500, 12000],
+      "food_pkr_per_day": [1200, 3000],
+      "local_transport_pkr_per_day": [2500, 6000],
+      "notes": "Lower Swat (Mingora) is cheaper; Kalam and upper valleys cost more in peak summer"
+    },
+    "permits": "CNIC sufficient for Pakistani nationals; no special permits for the main valley.",
+    "stays": ["Mingora / Saidu Sharif (largest base)", "Bahrain", "Kalam (upper valley)", "Malam Jabba (ski resort)"],
+    "activities": ["Malam Jabba skiing & chairlift", "Kalam Valley", "Mahodand Lake", "Swat River", "Butkara Buddhist stupa", "Fizagat riverside park"],
+    "tips": ["Lower Swat is reachable year-round; only upper valleys snow shut in winter", "Roads to Kalam are slow and busy in peak season — start early", "Carry layers for the upper valleys even in summer"]
+  },
+
+  {
+    "id": "murree-galiyat",
+    "name": "Murree & Galiyat",
+    "region": "Punjab / KP (Galiyat)",
+    "tags": ["hills", "chill", "family", "accessible", "viewpoints", "pine-forests"],
+    "description": "The closest hill stations to Islamabad — pine-covered ridges, Mall Road, and the forest trails of the Galiyat; an easy, relaxed family weekend escape rather than a remote adventure.",
+    "recommended_trip_days": { "min": 1, "ideal": 2 },
+    "drive_times": {
+      "from_islamabad": { "min_hours": 1.5, "max_hours": 3, "note": "~1-1.5 hrs to Murree via the Expressway; longer in weekend/holiday traffic" },
+      "nearest_airport": "Islamabad International Airport (ISB), ~1.5-2 hr drive"
+    },
+    "open_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "best_season": {
+      "months": "Year-round",
+      "highlights": "Cool summer escape (May-September); winter snowfall (December-January) draws big crowds",
+      "avoid": "Public holidays and long weekends — severe traffic jams and overcrowding"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [3000, 15000],
+      "food_pkr_per_day": [1000, 3000],
+      "local_transport_pkr_per_day": [1500, 4000],
+      "notes": "Cheaper midweek; both prices and crowds spike on weekends and holidays"
+    },
+    "permits": "None — open access, a domestic tourism hub.",
+    "stays": ["Murree Mall Road", "Bhurban", "Nathia Gali (Galiyat)", "Ayubia"],
+    "activities": ["Mall Road Murree", "Patriata (New Murree) chairlift", "Nathia Gali pipeline trail", "Ayubia chairlift", "Mushkpuri & Miranjani day hikes"],
+    "tips": ["Avoid peak weekends and snow-season holidays — traffic can gridlock for hours", "Book hotels ahead in winter snowfall season", "It's a relaxed family destination, not a trekking adventure"]
+  }
+]
