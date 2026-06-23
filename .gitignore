@@ -24,3 +24,10 @@ chroma/
 # Learning / scratch — kept local, not part of the shipped project
 practice/
 check_keys.py
+
+# Frontend (Node)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
