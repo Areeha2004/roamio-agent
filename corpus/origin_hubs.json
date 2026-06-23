@@ -1,0 +1,30 @@
+{
+  "hub": "Islamabad",
+  "note": "Northern Pakistan routes funnel through the Islamabad/Hazara corridor. Drive time from any origin = (origin -> Islamabad) + (Islamabad -> destination). This table holds the first leg. Hand-curated; verify/extend as needed.",
+  "origins": {
+    "islamabad": { "hours_to_hub": 0, "note": "the staging hub itself" },
+    "rawalpindi": { "hours_to_hub": 0.5, "note": "twin city of Islamabad" },
+    "lahore": { "hours_to_hub": 4.5, "note": "via the M-2 motorway" },
+    "peshawar": { "hours_to_hub": 2, "note": "via the M-1 motorway" },
+    "faisalabad": { "hours_to_hub": 3.5, "note": "via M-3 then M-2" },
+    "multan": { "hours_to_hub": 5.5, "note": "via M-4 then M-2" },
+    "sialkot": { "hours_to_hub": 4, "note": "via Sialkot-Lahore motorway then M-2" },
+    "karachi": { "hours_to_hub": 20, "note": "very long by road — most travellers fly to Islamabad or Skardu" },
+    "quetta": { "hours_to_hub": 11, "note": "long drive; flying via Islamabad is common" },
+    "gujranwala": { "hours_to_hub": 3.5, "distance_to_hub_km": 240, "note": "via the M-2 motorway" },
+    "gujrat": { "hours_to_hub": 2.5, "distance_to_hub_km": 180, "note": "via GT Road or M-2 connection" },
+    "hyderabad": { "hours_to_hub": 18, "distance_to_hub_km": 1450, "note": "very long by road — most travellers fly to Islamabad" },
+    "bahawalpur": { "hours_to_hub": 7.5, "distance_to_hub_km": 590, "note": "via M-5 then M-2" },
+    "sargodha": { "hours_to_hub": 3, "distance_to_hub_km": 220, "note": "via the M-2 motorway and regional highways" },
+    "abbottabad": { "hours_to_hub": 2, "distance_to_hub_km": 125, "side": "north", "note": "via Hazara Motorway (M-15)" },
+    "mansehra": { "hours_to_hub": 2.5, "distance_to_hub_km": 165, "side": "north", "note": "via Hazara Motorway (M-15)" },
+    "jhelum": { "hours_to_hub": 1.5, "distance_to_hub_km": 120, "note": "via the M-2 motorway" },
+    "muzaffarabad": { "hours_to_hub": 3.5, "distance_to_hub_km": 140, "note": "via Murree Expressway and Kohala" },
+    "mirpur": { "hours_to_hub": 2, "distance_to_hub_km": 130, "note": "via Mangla Road" },
+    "sukkur": { "hours_to_hub": 13, "distance_to_hub_km": 980, "note": "long drive via M-5 and M-2; flying is often preferred" },
+    "swat": { "hours_to_hub": 4.5, "distance_to_hub_km": 250, "side": "north", "note": "via Swat Motorway to Mingora" },
+    "gilgit": { "hours_to_hub": 9, "distance_to_hub_km": 510, "side": "north", "note": "via the Karakoram Highway (N-35)" },
+    "skardu": { "hours_to_hub": 13, "distance_to_hub_km": 640, "side": "north", "note": "long mountainous drive via the Karakoram Highway and Jaglot–Skardu Road; many travellers fly instead" },
+    "rahim_yar_khan": { "hours_to_hub": 9, "distance_to_hub_km": 700, "note": "via M-5 then M-2" }
+  }
+}

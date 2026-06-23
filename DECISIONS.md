@@ -142,3 +142,45 @@ for the things only a human can judge (is this fact actually true?).
 **Takeaway.** Write the guardrail before you scale the data, not after you ship a
 bug. Documentation (SCHEMA.md) plus an executable check (validate_corpus.py) keeps
 the doc and the data honest with each other.
+
+---
+
+## 006 · Start-city routing — reject a live Maps API, compose through a curated hub
+**Date:** 2026-06-22 (Week 2) · **Area:** Architecture / routing
+
+**Challenge.** `build_route` only stored drive times from Islamabad, but the planner
+form lets users start anywhere (Lahore, Karachi…). Hardcoding "everyone starts in
+Islamabad" would gut the app's purpose. The tempting fix was a live Google Maps API.
+
+**Decision.** Rejected the live Maps API. Instead, exploited the region's geography:
+all Northern Pakistan routes funnel through the Islamabad/Hazara corridor, so
+`drive_time(city -> destination) = (city -> Islamabad) + (Islamabad -> destination)`.
+The second leg already lives in corpus.json; added the first leg as a small curated
+`origin_hubs.json` (≈8 cities). `build_route` composes the two at runtime.
+
+**Why.** A live API means billing setup, an external runtime dependency on every
+request, latency, and failure handling — and it teaches Google Cloud setup, not
+RAG/agents. The hub-composition gives real, city-specific drive times with zero
+runtime dependency, is extensible (one JSON line per new city), and stays true to
+the project's "curate static data, avoid fragile integrations" principle. Far cities
+(Karachi 76h round-trip) even surface a "most travellers fly" note that
+`check_feasibility` can act on. Limitation (stated openly): models road travel via
+the hub; doesn't compute flights or non-hub origins — acceptable for a Northern-
+Pakistan v0.
+
+**Takeaway.** Before reaching for an external API, check whether the domain's
+*structure* lets you decompose the problem into a small static dataset. Hub-and-spoke
+geography turned a 15×15 routing problem into a one-leg lookup.
+
+**Update (2026-06-22) — the model's boundary.** Adding northern origin cities
+(Gilgit, Skardu, Abbottabad…) exposed that the sum-model only holds when the origin
+is SOUTH of the hub. A northern origin is already up the corridor, so routing it back
+through Islamabad over-estimates (Gilgit→Hunza computes 27h vs ~3h real). I tried a
+"corridor position" formula (`|dest − origin|`) but it CREATED new errors: Northern
+Pakistan is a **tree** (separate KKH / Kaghan / Swat spurs), not a line, so it made
+Gilgit→Naran = 0h. Mature call: don't fake precision with a formula that's still
+wrong — keep the honest sum-model, mark northern origins with `"side": "north"`, and
+emit a warning that their estimate is an upper bound (the safe direction for
+feasibility). **Takeaway:** scope a tool to where its approximation is valid and flag
+the boundary, rather than chase a more complex model that's still incorrect. A real
+fix would need a road graph — out of scope for v0.
