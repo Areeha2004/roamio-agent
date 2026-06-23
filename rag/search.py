@@ -1,35 +1,40 @@
 """
-Roamio RAG — search_destinations()
-==================================
-The first real product function: given a free-text query, return the most
-relevant destinations from the corpus using semantic (vector) search.
+Roamio RAG — search_destinations() (Chroma-persisted)
+=====================================================
+Given a free-text query, return the most relevant destinations from the corpus
+using semantic (vector) search.
 
-This is the FAISS-backed version of the by-hand cosine search you wrote in
-practice/02. FAISS is just a fast index over the same vectors — at 5 destinations
-you wouldn't notice, but it's the same call you'll make at 15 or 15,000.
+Storage: a PERSISTENT Chroma store on disk (the ./chroma/ folder, gitignored).
+Unlike the earlier in-memory FAISS version, the corpus is embedded ONCE and reused
+across runs — so you don't pay embedding cost every time you search.
 
-Run the demo:   ./venv/Scripts/python.exe rag/search.py
-Import it:      from rag.search import search_destinations
+Run the demo:        ./venv/Scripts/python.exe rag/search.py
+Rebuild the index:   ./venv/Scripts/python.exe rag/search.py --rebuild
+Import it:           from rag.search import search_destinations
 """
 
 import json
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_chroma import Chroma
 
 CORPUS_PATH = Path(__file__).parent.parent / "corpus" / "corpus.json"
+PERSIST_DIR = str(Path(__file__).parent.parent / "chroma")
+COLLECTION = "destinations"
 
 _embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-_store = None  # built once, reused (embedding the corpus has a cost)
+_store = None  # cached within a process
 
 
 def destination_to_text(d):
-    """Flatten a destination into the text we embed. What you include here
-    determines what semantic search can 'see'. (Same idea as practice/02.)"""
+    """Flatten a destination into the ONE text chunk we embed per destination.
+    (Chunking decision: one chunk per destination — the docs are ~200 tokens,
+    well under the embedding limit, and each is a single coherent 'place'.)"""
     return (
         f"{d['name']} in {d['region']}, Pakistan. "
         f"{d['description']} "
@@ -40,30 +45,52 @@ def destination_to_text(d):
     )
 
 
-def _load_store():
-    """Build the FAISS index from corpus.json (once)."""
+def _index(store):
+    """(Re)embed the whole corpus into the store. Uses each destination's id as
+    the vector id, and clears existing vectors first so a rebuild reflects the
+    current corpus.json exactly (no stale or duplicate entries)."""
+    corpus = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
+    ids = [d["id"] for d in corpus]
+    texts = [destination_to_text(d) for d in corpus]
+    metadatas = [
+        {"id": d["id"], "name": d["name"], "region": d["region"]}
+        for d in corpus
+    ]
+    existing = store.get()
+    if existing["ids"]:
+        store.delete(ids=existing["ids"])
+    store.add_texts(texts=texts, metadatas=metadatas, ids=ids)
+    return len(ids)
+
+
+def get_store(rebuild=False):
+    """Connect to the persistent Chroma store. Embeds the corpus only if the
+    store is empty (first run) or rebuild=True; otherwise loads from disk."""
     global _store
-    if _store is None:
-        corpus = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
-        texts = [destination_to_text(d) for d in corpus]
-        # Metadata travels with each vector so results are useful objects,
-        # not just raw text. The agent will read these fields later.
-        metadatas = [
-            {"id": d["id"], "name": d["name"], "region": d["region"]}
-            for d in corpus
-        ]
-        _store = FAISS.from_texts(texts, _embeddings, metadatas=metadatas)
+    if _store is None or rebuild:
+        store = Chroma(
+            collection_name=COLLECTION,
+            embedding_function=_embeddings,
+            persist_directory=PERSIST_DIR,
+            # cosine space -> distance in [0,2], lower = closer (matches our
+            # similarity intuition from practice/02).
+            collection_metadata={"hnsw:space": "cosine"},
+        )
+        count = len(store.get()["ids"])
+        if count == 0 or rebuild:
+            n = _index(store)
+            print(f"[index] embedded {n} destinations into Chroma  ({PERSIST_DIR})")
+        else:
+            print(f"[index] loaded {count} destinations from disk — no re-embedding")
+        _store = store
     return _store
 
 
 def search_destinations(query, k=3):
     """Return the top-k destinations most relevant to `query`.
-
-    Each result: {id, name, region, distance}. distance is FAISS L2 distance,
-    so LOWER = closer match. We rank by it; we never threshold on its absolute
-    value (that lesson from practice/02 still holds).
-    """
-    store = _load_store()
+    Each result: {id, name, region, distance}. distance is cosine distance
+    (lower = closer). Rank by it; never threshold on its absolute value."""
+    store = get_store()
     hits = store.similarity_search_with_score(query, k=k)
     return [
         {
@@ -77,9 +104,9 @@ def search_destinations(query, k=3):
 
 
 if __name__ == "__main__":
-    # A spread of queries — note especially the 'chill family' one: with Murree
-    # now in the corpus, retrieval has to DISCRIMINATE between vibes, not just
-    # return the nearest mountain.
+    rebuild = "--rebuild" in sys.argv
+    get_store(rebuild=rebuild)  # build/load once, with a clear log line
+
     demo_queries = [
         "adventure trekking near Skardu, accessible in July, mid budget",
         "chill family-friendly hills close to Islamabad for a weekend",
@@ -90,4 +117,4 @@ if __name__ == "__main__":
         print(f'\nQuery: "{q}"')
         for r in search_destinations(q, k=3):
             print(f"   {r['distance']:.4f}  {r['name']}  ({r['region']})")
-    print("\n(distance = L2; lower is a closer match. Rank order is what matters.)")
+    print("\n(distance = cosine; lower is a closer match. Rank order is what matters.)")
