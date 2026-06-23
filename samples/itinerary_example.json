@@ -1,0 +1,124 @@
+{
+  "request": {
+    "days": 8,
+    "budget_pkr": 300000,
+    "start_city": "Islamabad",
+    "group_type": "family",
+    "vibe": "adventure",
+    "month": 7
+  },
+  "summary": {
+    "title": "8-day family adventure to Hunza",
+    "feasible": true,
+    "destinations": ["hunza-valley"],
+    "total_cost_pkr": [157200, 444000],
+    "total_drive_hours": 36,
+    "headline": "A relaxed family loop up the Karakoram Highway to the Hunza Valley."
+  },
+  "warnings": [
+    { "type": "permit", "text": "Carry your CNIC; foreigners may need an NOC for restricted zones near Khunjerab." },
+    { "type": "season", "text": "Days are cold even in July at altitude — pack warm layers." },
+    { "type": "info", "text": "ATMs are scarce and unreliable — carry enough cash for the trip." }
+  ],
+  "days": [
+    {
+      "day": 1,
+      "type": "travel",
+      "title": "Islamabad → Chilas",
+      "from": "Islamabad",
+      "to": "Chilas",
+      "drive_hours": 8,
+      "stop_id": null,
+      "activities": [],
+      "notes": "A long first day on the Karakoram Highway. Overnight in Chilas to break the journey."
+    },
+    {
+      "day": 2,
+      "type": "travel",
+      "title": "Chilas → Karimabad (Hunza)",
+      "from": "Chilas",
+      "to": "Karimabad",
+      "drive_hours": 8,
+      "stop_id": null,
+      "activities": [],
+      "notes": "Continue up the KKH, passing Nanga Parbat viewpoints, into the Hunza Valley by evening."
+    },
+    {
+      "day": 3,
+      "type": "stay",
+      "title": "Forts & old Karimabad",
+      "from": null,
+      "to": null,
+      "drive_hours": 0,
+      "stop_id": "hunza-valley",
+      "activities": ["Baltit Fort", "Altit Fort"],
+      "notes": "Ease into the valley with the two historic forts and a walk through old Karimabad."
+    },
+    {
+      "day": 4,
+      "type": "stay",
+      "title": "Attabad Lake & Passu",
+      "from": null,
+      "to": null,
+      "drive_hours": 0,
+      "stop_id": "hunza-valley",
+      "activities": ["Attabad Lake (boating)", "Passu Cones viewpoint", "Hussaini Suspension Bridge"],
+      "notes": "A scenic day north — boating on Attabad Lake and photo stops at the Passu Cones."
+    },
+    {
+      "day": 5,
+      "type": "stay",
+      "title": "Khunjerab Pass day trip",
+      "from": null,
+      "to": null,
+      "drive_hours": 0,
+      "stop_id": "hunza-valley",
+      "activities": ["Khunjerab Pass day trip", "Eagle's Nest sunrise"],
+      "notes": "Early start for the Pakistan-China border at Khunjerab; catch the Eagle's Nest viewpoint for sunrise or sunset."
+    },
+    {
+      "day": 6,
+      "type": "travel",
+      "title": "Karimabad → Chilas",
+      "from": "Karimabad",
+      "to": "Chilas",
+      "drive_hours": 8,
+      "stop_id": null,
+      "activities": [],
+      "notes": "Begin the return down the KKH, overnighting again in Chilas."
+    },
+    {
+      "day": 7,
+      "type": "travel",
+      "title": "Chilas → Islamabad",
+      "from": "Chilas",
+      "to": "Islamabad",
+      "drive_hours": 8,
+      "stop_id": null,
+      "activities": [],
+      "notes": "The final long drive back to Islamabad. Arrive by evening."
+    },
+    {
+      "day": 8,
+      "type": "stay",
+      "title": "Buffer / departure",
+      "from": null,
+      "to": null,
+      "drive_hours": 0,
+      "stop_id": null,
+      "activities": [],
+      "notes": "A buffer day for rest or to absorb any delay on the mountain roads before heading home."
+    }
+  ],
+  "cost_breakdown_pkr": {
+    "hotels": [42000, 210000],
+    "food": [48000, 96000],
+    "local_transport": [24000, 48000],
+    "long_haul_transport": [43200, 90000],
+    "total": [157200, 444000]
+  },
+  "meta": {
+    "share_id": null,
+    "disclaimer": "Costs are estimates stored as ranges — verify current prices before booking."
+  }
+}
