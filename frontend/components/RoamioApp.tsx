@@ -128,6 +128,50 @@ const SAMPLE_TRIP = {
   ],
 };
 
+// ─── Backend wiring ───────────────────────────────────────────────────────────
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const midpoint = (range: number[]) => Math.round((range[0] + range[1]) / 2);
+
+// Map the backend itinerary JSON (ITINERARY_SCHEMA) to the shape ItineraryPage renders.
+// Numbers/facts come straight from the API; a few display-only fields are derived.
+function adaptItinerary(api: any): typeof SAMPLE_TRIP {
+  const req = api.request;
+  const cb = api.cost_breakdown_pkr;
+  const totalCost = midpoint(api.summary.total_cost_pkr);
+  const perDay = Math.round(totalCost / Math.max(1, req.days));
+  const warn = (t: string) => api.warnings.find((w: any) => w.type === t);
+  const permit = warn("permit");
+
+  return {
+    title: api.summary.title,
+    days: req.days,
+    startCity: req.start_city,
+    groupType: cap(req.group_type),
+    vibe: cap(req.vibe),
+    totalCost,
+    perDayCost: perDay,
+    transport: midpoint(cb.local_transport) + midpoint(cb.long_haul_transport),
+    accommodation: midpoint(cb.hotels),
+    food: midpoint(cb.food),
+    bestSeason: api.summary.feasible ? "In season for your dates" : "Check seasonal access",
+    currentSeasonWarning: (warn("info")?.text || warn("season")?.text || ""),
+    permitRequired: !!permit,
+    permitNote: permit?.text || "",
+    days_data: api.days.map((d: any) => ({
+      day: d.day,
+      destination: d.title,
+      emoji: d.type === "travel" ? "🚗" : "🏔️",
+      tagline: d.type === "travel" ? "On the road" : "Exploring",
+      activities: d.activities.length ? d.activities : [d.notes],
+      estimatedCost: perDay,
+      highlight: d.activities[0] || d.notes,
+      season: "",
+    })),
+  };
+}
+
 const CITIES = [
   "Islamabad", "Lahore", "Karachi", "Peshawar",
   "Quetta", "Multan", "Faisalabad", "Gilgit",
@@ -950,11 +994,11 @@ function LoadingPage() {
 }
 
 // ─── Itinerary Page ───────────────────────────────────────────────────────────
-function ItineraryPage({ onTweak, onNewTrip }: { onTweak: () => void; onNewTrip: () => void }) {
+function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: () => void; onNewTrip: () => void }) {
   const [copied, setCopied] = useState(false);
   const [tweakInput, setTweakInput] = useState("");
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  const trip = SAMPLE_TRIP;
+  // `trip` arrives as a prop — live API data, or SAMPLE_TRIP before a search runs.
 
   const handleCopy = () => {
     navigator.clipboard.writeText("https://roamio.pk/trip/northern-escape-5d");
@@ -1274,12 +1318,24 @@ function ErrorPage({ onRetry }: { onRetry: () => void }) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState<Page>("landing");
+  const [trip, setTrip] = useState<typeof SAMPLE_TRIP>(SAMPLE_TRIP);
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handlePlanSubmit = (form: PlanForm) => {
+  const handlePlanSubmit = async (form: PlanForm) => {
     if (form.budget < form.days * 5000) { setPage("error"); return; }
     setPage("loading");
-    loadingTimer.current = setTimeout(() => setPage("itinerary"), 4500);
+    try {
+      const res = await fetch(`${API_URL}/generate-itinerary`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      setTrip(adaptItinerary(await res.json()));
+      setPage("itinerary");
+    } catch {
+      setPage("error");
+    }
   };
 
   useEffect(() => {
@@ -1298,7 +1354,7 @@ export default function App() {
       {page === "landing"    && <LandingPage onPlanClick={() => setPage("planner")} />}
       {page === "planner"    && <PlannerPage onSubmit={handlePlanSubmit} />}
       {page === "loading"    && <LoadingPage />}
-      {page === "itinerary"  && <ItineraryPage onTweak={() => setPage("loading")} onNewTrip={() => setPage("planner")} />}
+      {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={() => setPage("loading")} onNewTrip={() => setPage("planner")} />}
       {page === "error"      && <ErrorPage onRetry={() => setPage("planner")} />}
     </div>
   );
