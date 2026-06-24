@@ -12,6 +12,7 @@ form object as-is. CORS is open to the Next.js dev origin.
 Run:  ./venv/Scripts/python.exe -m uvicorn api.main:app --reload --port 8000
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -25,13 +26,16 @@ from orchestrator import generate_itinerary  # noqa: E402
 
 app = FastAPI(title="Roamio API", version="0.1.0")
 
-# Let the Next.js dev server (and Vite, just in case) call us from the browser.
+# CORS origins: defaults to local dev; in production set ALLOWED_ORIGINS to your
+# Vercel URL (comma-separated for multiple), e.g. "https://roamio.vercel.app".
+_DEFAULT_ORIGINS = [
+    "http://localhost:3000", "http://127.0.0.1:3000",
+    "http://localhost:5173", "http://127.0.0.1:5173",
+]
+_env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", "http://127.0.0.1:3000",
-        "http://localhost:5173", "http://127.0.0.1:5173",
-    ],
+    allow_origins=_env_origins or _DEFAULT_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
