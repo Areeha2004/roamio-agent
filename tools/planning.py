@@ -169,15 +169,18 @@ def check_feasibility(route, cost, budget, days, month):
             problems.append(f"{s['name']} is closed in {month_name} (open: {open_names}).")
             suggestions.append(f"Drop {s['name']}, or travel when it's open ({open_names}).")
 
-    # 2) TIME — does driving + time at each stop fit in the days available?
+    # 2) TIME — driving + time at stops, but the arrival and departure days double
+    #    as time at the destination (you explore the evening you arrive / morning you
+    #    leave), so they overlap the stay instead of stacking on top. Without this, a
+    #    normal 3-day Naran trip is wrongly scored as needing 5 days.
     drive_days = math.ceil(route["est_round_trip_drive_hours"] / MAX_DRIVE_HOURS_PER_DAY)
     stop_days = sum(s["recommended_trip_days"]["min"] for s in stops)
-    days_needed = drive_days + stop_days
+    overlap = 2 if stops else 0
+    days_needed = max(drive_days + stop_days - overlap, stop_days, 1)
     time_ok = days_needed <= days
     if not time_ok:
         farthest = route["ordered_stops"][-1]["name"] if route["ordered_stops"] else "a stop"
-        problems.append(f"Trip needs ~{days_needed} days ({drive_days} driving + {stop_days} at stops) "
-                        f"but only {days} available.")
+        problems.append(f"Trip needs ~{days_needed} days but only {days} available.")
         suggestions.append(f"Add ~{days_needed - days} days, or drop the farthest stop ({farthest}).")
 
     # 3) BUDGET — can they afford at least the cheapest version?
