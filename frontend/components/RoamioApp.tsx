@@ -751,9 +751,9 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
           {/* Budget */}
           <div className="bg-card border border-border rounded-2xl p-6">
             <label className="block text-sm font-semibold text-foreground mb-1" style={{ fontFamily: "Sora, sans-serif" }}>
-              Total budget
+              Total trip budget
             </label>
-            <p className="text-xs text-muted-foreground mb-4">Excluding flights from your home city.</p>
+            <p className="text-xs text-muted-foreground mb-4">For your whole group and the entire trip — covers stays, food, and road travel within Pakistan. Flights to your start city are not included.</p>
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm text-muted-foreground font-medium">PKR</span>
               <input

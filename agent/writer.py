@@ -76,9 +76,13 @@ def _trip_facts(request, route):
 _SYSTEM = (
     "You are a Pakistan travel planner. Lay out a realistic day-by-day itinerary that "
     "fits EXACTLY the given number of days. Use travel days for long drives (with an "
-    "overnight waypoint like Chilas where needed) and stay days at destinations. On stay "
-    "days, choose activities ONLY from the provided list for that stop — never invent "
-    "places. Do not mention prices (costs are added separately). Keep notes warm and short."
+    "overnight waypoint like Chilas where needed) and stay days at destinations. Give EACH "
+    "stay day 3-5 activities so days feel full: use the specific landmarks from the provided "
+    "list for that stop, PLUS realistic generic experiences (a local meal, a bazaar stroll, "
+    "a riverside walk, a sunrise viewpoint, leisure time). Do NOT invent specific NAMED "
+    "places that are not in the provided list — generic experiences are fine, fabricated "
+    "landmarks are not. Do not mention prices (costs are added separately). Write a warm, "
+    "specific 1-2 sentence note for each day."
 )
 
 
@@ -136,7 +140,10 @@ def write_itinerary(request, route, cost, feasibility):
             "to": d.to_place if not is_stay else None,
             "drive_hours": d.drive_hours if not is_stay else 0,
             "stop_id": d.stop_id if is_stay else None,
-            "activities": _validate_activities(d.stop_id, d.activities) if is_stay else [],
+            # Activities are LLM-enriched (landmarks from corpus + generic experiences).
+            # We no longer drop non-corpus items, so days feel full; the prompt forbids
+            # inventing NAMED places. Trust-critical data (costs/permits/route) stays grounded.
+            "activities": d.activities if is_stay else [],
             "notes": d.notes,
         })
 
