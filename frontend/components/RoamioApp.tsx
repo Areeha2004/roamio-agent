@@ -172,6 +172,27 @@ function adaptItinerary(api: any): typeof SAMPLE_TRIP {
   };
 }
 
+// Interpret a free-text tweak ("+2 days", "make it cheaper", "focus on photography")
+// as changes to the original form, then re-plan. Unknown tweaks just re-run as-is.
+function applyTweak(form: PlanForm, tweak: string): PlanForm {
+  const t = tweak.toLowerCase();
+  const f: PlanForm = { ...form };
+  const add = t.match(/(?:\+|add\s*)(\d+)\s*day/);
+  if (add) f.days = Math.min(30, f.days + parseInt(add[1]));
+  else if (/rest day|extra day|add a day|one more day/.test(t)) f.days = Math.min(30, f.days + 1);
+  else if (/longer|more days/.test(t)) f.days = Math.min(30, f.days + 2);
+  const sub = t.match(/(?:-|remove\s*|fewer\s*)(\d+)\s*day/);
+  if (sub) f.days = Math.max(1, f.days - parseInt(sub[1]));
+  else if (/shorter|fewer days/.test(t)) f.days = Math.max(1, f.days - 2);
+  if (/cheaper|lower budget|less expensive|reduce budget/.test(t)) f.budget = Math.max(10000, Math.round(f.budget * 0.8));
+  if (/luxur|premium|higher budget|more comfort/.test(t)) f.budget = Math.round(f.budget * 1.3);
+  if (/photograph/.test(t)) f.vibe = "Photography";
+  if (/adventur/.test(t)) f.vibe = "Adventure";
+  if (/chill|relax/.test(t)) f.vibe = "Chill";
+  if (/religious|spiritual/.test(t)) f.vibe = "Religious";
+  return f;
+}
+
 const CITIES = [
   "Islamabad", "Lahore", "Karachi", "Peshawar",
   "Quetta", "Multan", "Faisalabad", "Gilgit",
@@ -994,7 +1015,7 @@ function LoadingPage() {
 }
 
 // ─── Itinerary Page ───────────────────────────────────────────────────────────
-function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: () => void; onNewTrip: () => void }) {
+function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: (tweak: string) => void; onNewTrip: () => void }) {
   const [copied, setCopied] = useState(false);
   const [tweakInput, setTweakInput] = useState("");
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
@@ -1233,7 +1254,7 @@ function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP;
                 className="flex-1 bg-input-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:border-primary transition-all"
               />
               <button
-                onClick={onTweak}
+                onClick={() => onTweak(tweakInput)}
                 className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors flex-shrink-0"
                 style={{ background: P.fern, fontFamily: "Sora, sans-serif" }}
               >
@@ -1319,10 +1340,11 @@ function ErrorPage({ onRetry }: { onRetry: () => void }) {
 export default function App() {
   const [page, setPage] = useState<Page>("landing");
   const [trip, setTrip] = useState<typeof SAMPLE_TRIP>(SAMPLE_TRIP);
+  const [lastForm, setLastForm] = useState<PlanForm | null>(null);
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handlePlanSubmit = async (form: PlanForm) => {
-    if (form.budget < form.days * 5000) { setPage("error"); return; }
+  // Shared: call the backend, render the result. Used by both submit and tweak.
+  const runPlan = async (form: PlanForm) => {
     setPage("loading");
     try {
       const res = await fetch(`${API_URL}/generate-itinerary`, {
@@ -1332,10 +1354,22 @@ export default function App() {
       });
       if (!res.ok) throw new Error(`API ${res.status}`);
       setTrip(adaptItinerary(await res.json()));
+      setLastForm(form);
       setPage("itinerary");
     } catch {
       setPage("error");
     }
+  };
+
+  const handlePlanSubmit = (form: PlanForm) => {
+    if (form.budget < form.days * 5000) { setPage("error"); return; }
+    runPlan(form);
+  };
+
+  // "Tweak this trip": adjust the last form and re-plan (no infinite loading).
+  const handleTweak = (tweak: string) => {
+    if (!lastForm) { setPage("planner"); return; }
+    runPlan(applyTweak(lastForm, tweak));
   };
 
   useEffect(() => {
@@ -1354,7 +1388,7 @@ export default function App() {
       {page === "landing"    && <LandingPage onPlanClick={() => setPage("planner")} />}
       {page === "planner"    && <PlannerPage onSubmit={handlePlanSubmit} />}
       {page === "loading"    && <LoadingPage />}
-      {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={() => setPage("loading")} onNewTrip={() => setPage("planner")} />}
+      {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={handleTweak} onNewTrip={() => setPage("planner")} />}
       {page === "error"      && <ErrorPage onRetry={() => setPage("planner")} />}
     </div>
   );
