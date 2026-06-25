@@ -940,7 +940,7 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
 }
 
 // ─── Loading Page ─────────────────────────────────────────────────────────────
-function LoadingPage() {
+function LoadingPage({ status }: { status?: string }) {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState(0);
   const steps = [
@@ -989,7 +989,7 @@ function LoadingPage() {
             style={{ width: `${Math.min(progress, 95)}%`, background: P.aquamarine }}
           />
         </div>
-        <p className="text-sm text-muted-foreground min-h-[20px] mb-8 transition-all">{steps[step]}</p>
+        <p className="text-sm text-muted-foreground min-h-[20px] mb-8 transition-all">{status || steps[step]}</p>
 
         <div className="flex items-center justify-center gap-2">
           {["ISB", "NAR", "HNZ", "SKD"].map((city, i) => (
@@ -1344,19 +1344,41 @@ export default function App() {
   const [page, setPage] = useState<Page>("landing");
   const [trip, setTrip] = useState<typeof SAMPLE_TRIP>(SAMPLE_TRIP);
   const [lastForm, setLastForm] = useState<PlanForm | null>(null);
+  const [status, setStatus] = useState("");
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Shared: call the backend, render the result. Used by both submit and tweak.
+  // Shared: stream the backend graph, update the loading status, render the result.
   const runPlan = async (form: PlanForm) => {
+    setStatus("Starting…");
     setPage("loading");
     try {
-      const res = await fetch(`${API_URL}/generate-itinerary`, {
+      const res = await fetch(`${API_URL}/generate-itinerary/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error(`API ${res.status}`);
-      setTrip(adaptItinerary(await res.json()));
+      if (!res.ok || !res.body) throw new Error(`API ${res.status}`);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let result: any = null;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";          // keep any incomplete trailing line
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let evt: any;
+          try { evt = JSON.parse(line); } catch { continue; }
+          if (evt.type === "progress") setStatus(evt.label);
+          else if (evt.type === "result") result = evt.itinerary;
+          else if (evt.type === "error") throw new Error("plan error");
+        }
+      }
+      if (!result) throw new Error("no itinerary");
+      setTrip(adaptItinerary(result));
       setLastForm(form);
       setPage("itinerary");
     } catch {
@@ -1390,7 +1412,7 @@ export default function App() {
       />
       {page === "landing"    && <LandingPage onPlanClick={() => setPage("planner")} />}
       {page === "planner"    && <PlannerPage onSubmit={handlePlanSubmit} />}
-      {page === "loading"    && <LoadingPage />}
+      {page === "loading"    && <LoadingPage status={status} />}
       {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={handleTweak} onNewTrip={() => setPage("planner")} />}
       {page === "error"      && <ErrorPage onRetry={() => setPage("planner")} />}
     </div>

@@ -12,17 +12,19 @@ form object as-is. CORS is open to the Next.js dev origin.
 Run:  ./venv/Scripts/python.exe -m uvicorn api.main:app --reload --port 8000
 """
 
+import json
 import os
 import sys
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "agent"))
-from orchestrator import generate_itinerary  # noqa: E402
+from orchestrator import generate_itinerary, graph  # noqa: E402
 
 app = FastAPI(title="Roamio API", version="0.1.0")
 
@@ -56,10 +58,9 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/generate-itinerary")
-def generate(req: PlanRequest):
-    # Map the frontend's shape to what generate_itinerary expects.
-    request = {
+def _to_request(req: PlanRequest) -> dict:
+    """Map the frontend's camelCase form to what the graph expects."""
+    return {
         "days": req.days,
         "budget_pkr": req.budget,
         "start_city": req.startCity,
@@ -67,12 +68,54 @@ def generate(req: PlanRequest):
         "vibe": req.vibe,
         "month": req.month,
     }
+
+
+@app.post("/generate-itinerary")
+def generate(req: PlanRequest):
+    """Non-streaming: returns the full itinerary in one response."""
     try:
-        result = generate_itinerary(request)
+        result = generate_itinerary(_to_request(req))
     except Exception as e:  # surface unexpected failures as 500s, not silent hangs
         raise HTTPException(status_code=500, detail=f"itinerary generation failed: {e}")
-
     if isinstance(result, dict) and "error" in result:
-        # e.g. an unsupported start city
-        raise HTTPException(status_code=400, detail=result)
+        raise HTTPException(status_code=400, detail=result)  # e.g. unsupported start city
     return result
+
+
+# Human-friendly progress labels per graph node (used by the stream).
+_NODE_LABELS = {
+    "search": "Searching destinations…",
+    "plan": "Building route & checking budget…",
+    "replan": "Adjusting the plan to fit…",
+    "conditions": "Checking live road & weather…",
+    "write": "Writing your day-by-day itinerary…",
+}
+
+
+@app.post("/generate-itinerary/stream")
+def generate_stream(req: PlanRequest):
+    """Stream graph progress as newline-delimited JSON, then the final itinerary.
+    Events: {"type":"progress","label":...} per node, then {"type":"result","itinerary":...}."""
+    request = _to_request(req)
+
+    def gen():
+        itinerary = None
+        try:
+            for chunk in graph.stream({"request": request}, stream_mode="updates"):
+                for node, update in chunk.items():
+                    yield json.dumps({"type": "progress", "node": node,
+                                      "label": _NODE_LABELS.get(node, "Working…")}) + "\n"
+                    if isinstance(update, dict) and update.get("itinerary") is not None:
+                        itinerary = update["itinerary"]
+            if itinerary and "error" not in itinerary:
+                yield json.dumps({"type": "result", "itinerary": itinerary}) + "\n"
+            else:
+                yield json.dumps({"type": "error", "detail": itinerary or "no itinerary produced"}) + "\n"
+        except Exception as e:
+            yield json.dumps({"type": "error", "detail": str(e)}) + "\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
