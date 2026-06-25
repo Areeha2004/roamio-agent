@@ -49,6 +49,7 @@ const SAMPLE_TRIP = {
   currentSeasonWarning: "June is peak season — book accommodation 2–3 weeks in advance.",
   permitRequired: true,
   permitNote: "NOC permit required for Gilgit-Baltistan (Hunza & upper KKH). Apply online via the Ministry of Interior portal at least 10–14 days before departure.",
+  liveConditions: ["Karakoram Highway is open and clear", "Pleasant summer weather expected in the valleys"],
   days_data: [
     {
       day: 1,
@@ -156,10 +157,8 @@ function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     accommodation: midpoint(cb.hotels),
     food: midpoint(cb.food),
     bestSeason: api.summary.feasible ? "In season for your dates" : "Check seasonal access",
-    currentSeasonWarning: (
-      api.warnings.filter((w: any) => w.type === "live").map((w: any) => w.text).join("  ·  ")
-      || warn("info")?.text || warn("season")?.text || ""
-    ),
+    currentSeasonWarning: (warn("season")?.text || warn("info")?.text || ""),
+    liveConditions: api.warnings.filter((w: any) => w.type === "live").map((w: any) => w.text),
     permitRequired: !!permit,
     permitNote: permit?.text || "",
     days_data: api.days.map((d: any) => ({
@@ -1103,6 +1102,30 @@ function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP;
             ))}
           </div>
         </div>
+
+        {/* Live Conditions Banner */}
+        {trip.liveConditions && trip.liveConditions.length > 0 && (
+          <div
+            className="rounded-2xl p-4 mb-3 flex items-start gap-3"
+            style={{ background: `${P.aquamarine}20`, border: `1px solid ${P.aquamarine}` }}
+          >
+            <Navigation size={17} style={{ color: P.hunterGreen, flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <p className="text-sm font-semibold mb-1.5 flex items-center gap-2" style={{ color: P.blackForest, fontFamily: "Sora, sans-serif" }}>
+                Live conditions
+                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ background: P.fern, color: "#fff" }}>Live</span>
+              </p>
+              <ul className="space-y-1">
+                {trip.liveConditions.map((c, i) => (
+                  <li key={i} className="text-xs leading-relaxed flex items-start gap-2" style={{ color: P.hunterGreen }}>
+                    <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: P.fern }} />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* Season Banner */}
         <div
