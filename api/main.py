@@ -24,7 +24,9 @@ from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "agent"))
+sys.path.insert(0, str(ROOT / "db"))
 from orchestrator import generate_itinerary, graph  # noqa: E402
+from store import save_trip, get_trip  # noqa: E402
 
 app = FastAPI(title="Roamio API", version="0.1.0")
 
@@ -73,12 +75,16 @@ def _to_request(req: PlanRequest) -> dict:
 @app.post("/generate-itinerary")
 def generate(req: PlanRequest):
     """Non-streaming: returns the full itinerary in one response."""
+    request = _to_request(req)
     try:
-        result = generate_itinerary(_to_request(req))
+        result = generate_itinerary(request)
     except Exception as e:  # surface unexpected failures as 500s, not silent hangs
         raise HTTPException(status_code=500, detail=f"itinerary generation failed: {e}")
     if isinstance(result, dict) and "error" in result:
         raise HTTPException(status_code=400, detail=result)  # e.g. unsupported start city
+    share_id = save_trip(request, result)
+    if share_id:
+        result["meta"]["share_id"] = share_id
     return result
 
 
@@ -108,6 +114,9 @@ def generate_stream(req: PlanRequest):
                     if isinstance(update, dict) and update.get("itinerary") is not None:
                         itinerary = update["itinerary"]
             if itinerary and "error" not in itinerary:
+                share_id = save_trip(request, itinerary)
+                if share_id:
+                    itinerary["meta"]["share_id"] = share_id
                 yield json.dumps({"type": "result", "itinerary": itinerary}) + "\n"
             else:
                 yield json.dumps({"type": "error", "detail": itinerary or "no itinerary produced"}) + "\n"
@@ -119,3 +128,12 @@ def generate_stream(req: PlanRequest):
         media_type="application/x-ndjson",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/trip/{share_id}")
+def get_saved_trip(share_id: str):
+    """Load a saved itinerary by its share id (for the shareable /trip/[id] page)."""
+    itinerary = get_trip(share_id)
+    if itinerary is None:
+        raise HTTPException(status_code=404, detail="trip not found")
+    return itinerary

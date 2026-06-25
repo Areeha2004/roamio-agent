@@ -10,3 +10,4 @@ tavily-python==0.7.26
 chromadb==1.5.9
 pydantic==2.13.4
 python-dotenv==1.2.2
+supabase==2.31.0
