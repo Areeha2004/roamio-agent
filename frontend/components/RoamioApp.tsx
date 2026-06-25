@@ -50,6 +50,7 @@ const SAMPLE_TRIP = {
   permitRequired: true,
   permitNote: "NOC permit required for Gilgit-Baltistan (Hunza & upper KKH). Apply online via the Ministry of Interior portal at least 10–14 days before departure.",
   liveConditions: ["Karakoram Highway is open and clear", "Pleasant summer weather expected in the valleys"],
+  shareId: "",
   days_data: [
     {
       day: 1,
@@ -137,7 +138,7 @@ const midpoint = (range: number[]) => Math.round((range[0] + range[1]) / 2);
 
 // Map the backend itinerary JSON (ITINERARY_SCHEMA) to the shape ItineraryPage renders.
 // Numbers/facts come straight from the API; a few display-only fields are derived.
-function adaptItinerary(api: any): typeof SAMPLE_TRIP {
+export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
   const req = api.request;
   const cb = api.cost_breakdown_pkr;
   const totalCost = midpoint(api.summary.total_cost_pkr);
@@ -161,6 +162,7 @@ function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     liveConditions: api.warnings.filter((w: any) => w.type === "live").map((w: any) => w.text),
     permitRequired: !!permit,
     permitNote: permit?.text || "",
+    shareId: api.meta?.share_id || "",
     days_data: api.days.map((d: any) => ({
       day: d.day,
       destination: d.title,
@@ -1017,14 +1019,17 @@ function LoadingPage({ status }: { status?: string }) {
 }
 
 // ─── Itinerary Page ───────────────────────────────────────────────────────────
-function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: (tweak: string) => void; onNewTrip: () => void }) {
+export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: (tweak: string) => void; onNewTrip: () => void }) {
   const [copied, setCopied] = useState(false);
   const [tweakInput, setTweakInput] = useState("");
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   // `trip` arrives as a prop — live API data, or SAMPLE_TRIP before a search runs.
 
   const handleCopy = () => {
-    navigator.clipboard.writeText("https://roamio.pk/trip/northern-escape-5d");
+    const url = trip.shareId
+      ? `${window.location.origin}/trip/${trip.shareId}`
+      : window.location.href;
+    navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
