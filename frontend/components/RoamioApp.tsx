@@ -156,7 +156,10 @@ function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     accommodation: midpoint(cb.hotels),
     food: midpoint(cb.food),
     bestSeason: api.summary.feasible ? "In season for your dates" : "Check seasonal access",
-    currentSeasonWarning: (warn("info")?.text || warn("season")?.text || ""),
+    currentSeasonWarning: (
+      api.warnings.filter((w: any) => w.type === "live").map((w: any) => w.text).join("  ·  ")
+      || warn("info")?.text || warn("season")?.text || ""
+    ),
     permitRequired: !!permit,
     permitNote: permit?.text || "",
     days_data: api.days.map((d: any) => ({

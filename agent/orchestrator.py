@@ -1,12 +1,11 @@
 """
 Roamio — generate_itinerary() as a LangGraph state machine
 ==========================================================
-Phase 1 of the post-v0 roadmap: the deterministic orchestrator, refactored into a
-LangGraph StateGraph. Same behaviour and output — but now expressed as nodes + a
-CONDITIONAL re-plan edge (the canonical 'agent' shape), which is the backbone for
-streaming (Phase 3) and memory (Phase 4).
+The deterministic orchestrator, expressed as a LangGraph StateGraph: nodes + a
+CONDITIONAL re-plan edge (the canonical 'agent' shape), plus a live-conditions node
+(Tavily web search) for freshness over the static corpus.
 
-    START → search → plan ──feasible?──► write → END
+    START → search → plan ──feasible?──► conditions → write → END
                        ▲          │
                        └─ replan ◄┘   (not feasible: drop a stop, try again)
 
@@ -28,11 +27,15 @@ sys.path.insert(0, str(ROOT / "agent"))
 from search import search_destinations
 from planning import build_route, estimate_cost, check_feasibility, MONTHS
 from writer import write_itinerary
+from web_search import web_search
 from langgraph.graph import StateGraph, START, END
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
 
 _corpus = {d["id"]: d for d in json.loads((ROOT / "corpus" / "corpus.json").read_text(encoding="utf-8"))}
 
 MAX_REPLANS = 6
+_conditions_chat = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 
 class TripState(TypedDict):
@@ -42,6 +45,7 @@ class TripState(TypedDict):
     route: Optional[dict]
     cost: Optional[dict]
     feasibility: Optional[dict]
+    live_conditions: list
     itinerary: Optional[dict]
     replan_count: int
     replan_notes: list
@@ -90,26 +94,59 @@ def replan_node(state: TripState) -> dict:
     return {"stops": stops, "replan_notes": notes, "replan_count": state["replan_count"] + 1}
 
 
+class _LiveConditions(BaseModel):
+    notes: list[str] = Field(
+        description="0-4 SHORT practical live-condition notes (road open/blocked, weather, "
+                    "pass status). Use ONLY the provided snippets; if nothing notable, return []."
+    )
+
+
+def conditions_node(state: TripState) -> dict:
+    """LIVE CONDITIONS: Tavily search per stop, summarized into warnings (freshness)."""
+    req = state["request"]
+    month_name = MONTHS[req["month"]]
+    snippets = []
+    for s in state["route"]["ordered_stops"][:3]:
+        for r in web_search(f"current road conditions and weather {s['name']} Pakistan {month_name} 2026", max_results=2):
+            if r["content"]:
+                snippets.append(f"[{s['name']}] {r['content'][:300]}")
+    if not snippets:
+        return {"live_conditions": []}
+    prompt = (
+        "From these web snippets about a Pakistan trip, give 0-4 SHORT live-condition notes "
+        "for a traveller (road open/blocked, weather, pass status). Use ONLY the snippets — "
+        "do not invent. Prefer the most recent/relevant. If nothing notable, return [].\n\n"
+        "SNIPPETS:\n" + "\n".join(snippets)
+    )
+    try:
+        notes = _conditions_chat.with_structured_output(_LiveConditions).invoke(prompt).notes
+    except Exception:
+        notes = []
+    return {"live_conditions": notes}
+
+
 def write_node(state: TripState) -> dict:
     """WRITE: turn the (best) plan into the day-by-day itinerary JSON."""
     req = state["request"]
     itinerary = write_itinerary(req, state["route"], state["cost"], state["feasibility"])
-    if "error" not in itinerary and state["replan_notes"]:
-        itinerary["warnings"] = (
-            [{"type": "info", "text": "Roamio adjusted your plan: " + " ".join(state["replan_notes"])}]
-            + itinerary["warnings"]
-        )
+    if "error" in itinerary:
+        return {"itinerary": itinerary}
+    if state["replan_notes"]:
+        itinerary["warnings"].insert(0, {"type": "info", "text": "Roamio adjusted your plan: " + " ".join(state["replan_notes"])})
         itinerary["meta"]["replan_notes"] = state["replan_notes"]
+    # live conditions go to the very top of the banner (most timely)
+    for note in reversed(state.get("live_conditions", []) or []):
+        itinerary["warnings"].insert(0, {"type": "live", "text": note})
     return {"itinerary": itinerary}
 
 
 def decide(state: TripState) -> str:
-    """THE CONDITIONAL EDGE: feasible (or out of options) → write; else → replan."""
+    """THE CONDITIONAL EDGE: feasible (or out of options) → conditions; else → replan."""
     feas = state["feasibility"]
     if feas.get("feasible"):
-        return "write"
+        return "conditions"
     if len(state["stops"]) <= 1 or state["replan_count"] >= MAX_REPLANS:
-        return "write"  # best-effort: nothing left to drop
+        return "conditions"  # best-effort: nothing left to drop
     return "replan"
 
 
@@ -119,11 +156,13 @@ def _build_graph():
     g.add_node("search", search_node)
     g.add_node("plan", plan_node)
     g.add_node("replan", replan_node)
+    g.add_node("conditions", conditions_node)
     g.add_node("write", write_node)
     g.add_edge(START, "search")
     g.add_edge("search", "plan")
-    g.add_conditional_edges("plan", decide, {"replan": "replan", "write": "write"})
+    g.add_conditional_edges("plan", decide, {"replan": "replan", "conditions": "conditions"})
     g.add_edge("replan", "plan")
+    g.add_edge("conditions", "write")
     g.add_edge("write", END)
     return g.compile()
 
@@ -145,20 +184,16 @@ def _summary(itin):
     print(f"  feasible: {s['feasible']}  | cost {s['total_cost_pkr'][0]:,}-{s['total_cost_pkr'][1]:,} PKR")
     for note in itin["meta"].get("replan_notes", []):
         print(f"  re-plan:  {note}")
+    for w in itin["warnings"]:
+        if w["type"] == "live":
+            print(f"  live:     {w['text']}")
     print(f"  days:     {len(itin['days'])}")
 
 
 if __name__ == "__main__":
-    scenarios = [
-        ("Generous budget, 8 days", {"days": 8, "budget_pkr": 500000, "start_city": "Islamabad",
-                                     "group_type": "family", "vibe": "Adventure", "month": 7}),
-        ("Tight budget -> should re-plan", {"days": 8, "budget_pkr": 150000, "start_city": "Lahore",
-                                            "group_type": "friends", "vibe": "Adventure", "month": 7}),
-        ("Chill short trip", {"days": 3, "budget_pkr": 80000, "start_city": "Islamabad",
-                              "group_type": "couple", "vibe": "Chill", "month": 6}),
-    ]
-    for label, req in scenarios:
-        print("\n" + "=" * 64)
-        print(label)
-        print("=" * 64)
-        _summary(generate_itinerary(req))
+    req = {"days": 8, "budget_pkr": 500000, "start_city": "Islamabad",
+           "group_type": "family", "vibe": "Adventure", "month": 7}
+    print("=" * 64)
+    print("Generate with live conditions (Tavily)")
+    print("=" * 64)
+    _summary(generate_itinerary(req))
