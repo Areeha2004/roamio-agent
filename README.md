@@ -170,4 +170,3 @@ Recorded in **[DECISIONS.md](DECISIONS.md)** — a few highlights:
 
 ---
 
-*A learning build by Areeha Zulfiqar — RAG + AI agents, shipped as one real product.*
