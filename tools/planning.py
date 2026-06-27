@@ -40,6 +40,8 @@ GROUP_SIZES = {            # group_type -> (people, hotel_rooms)
 }
 DRIVE_RATE_PKR_PER_HOUR = (1200, 2500)  # fuel-only -> hired car with driver
 MAX_DRIVE_HOURS_PER_DAY = 8
+# Where each accommodation tier sits within a destination's cost range.
+STYLE_POS = {"budget": 0.0, "standard": 0.5, "luxury": 1.0}
 
 
 # =========================================================================
@@ -104,13 +106,18 @@ def _avg_range(stops, field):
     return sum(lows) / len(lows), sum(highs) / len(highs)
 
 
-def estimate_cost(route, group_type, days):
-    """Estimate the total trip cost as a [min, max] PKR range.
+def _at(rng, pos):
+    """Value at position `pos` (0..1) within a (low, high) range."""
+    lo, hi = rng
+    return lo + pos * (hi - lo)
 
-    Model (confirmed): hotels = rooms x nights x avg nightly range;
-    food = people x days x avg daily range; local transport = days x avg daily
-    range (per group); long-haul = round-trip drive hours x 1200-2500 PKR/hr.
-    Uses low ends for the min total and high ends for the max."""
+
+def estimate_cost(route, group_type, days, style="standard"):
+    """Estimate the trip cost at a chosen accommodation tier (budget/standard/luxury).
+
+    The tier sets where in each destination's cost range hotels and food land
+    (budget=low, standard=mid, luxury=high). Local transport and fuel are tier-
+    independent (mid). Returns single PKR numbers with a per-component breakdown."""
     if "error" in route:
         return {"error": "cannot cost an invalid route", "route_error": route["error"]}
 
@@ -119,32 +126,33 @@ def estimate_cost(route, group_type, days):
         return {"error": "no stops to cost"}
 
     people, rooms = GROUP_SIZES.get(group_type, (2, 1))
-    nights = max(days - 1, 1)  # final day is the return leg
-
-    h_lo, h_hi = _avg_range(stops, "hotel_pkr_per_night")
-    f_lo, f_hi = _avg_range(stops, "food_pkr_per_day")
-    l_lo, l_hi = _avg_range(stops, "local_transport_pkr_per_day")
+    nights = max(days - 1, 1)        # final day is the return leg
+    pos = STYLE_POS.get(style, 0.5)
     drive_h = route["est_round_trip_drive_hours"]
 
-    hotels = [rooms * nights * h_lo, rooms * nights * h_hi]
-    food = [people * days * f_lo, people * days * f_hi]
-    local = [days * l_lo, days * l_hi]
-    long_haul = [drive_h * DRIVE_RATE_PKR_PER_HOUR[0], drive_h * DRIVE_RATE_PKR_PER_HOUR[1]]
+    hotel_per_night = _at(_avg_range(stops, "hotel_pkr_per_night"), pos)   # scales with tier
+    food_per_day = _at(_avg_range(stops, "food_pkr_per_day"), pos)         # scales with tier
+    local_lo, local_hi = _avg_range(stops, "local_transport_pkr_per_day")
+    local_per_day = (local_lo + local_hi) / 2                              # tier-independent
+    fuel_rate = sum(DRIVE_RATE_PKR_PER_HOUR) / 2                           # tier-independent
 
-    def _i(pair):  # round a [lo, hi] pair to ints
-        return [int(round(pair[0])), int(round(pair[1]))]
-
-    breakdown = {"hotels": _i(hotels), "food": _i(food),
-                 "local_transport": _i(local), "long_haul_transport": _i(long_haul)}
-    total = [int(round(hotels[0] + food[0] + local[0] + long_haul[0])),
-             int(round(hotels[1] + food[1] + local[1] + long_haul[1]))]
+    hotels = rooms * nights * hotel_per_night
+    food = people * days * food_per_day
+    local = days * local_per_day
+    fuel = drive_h * fuel_rate
+    total = hotels + food + local + fuel
 
     return {
-        "group_type": group_type, "people": people, "rooms": rooms,
+        "style": style, "group_type": group_type, "people": people, "rooms": rooms,
         "days": days, "nights": nights,
-        "breakdown_pkr": breakdown,
-        "total_pkr": total,
-        "assumptions": f"{people}p/{rooms}rm; long-haul {drive_h}h x {DRIVE_RATE_PKR_PER_HOUR} PKR/hr",
+        "hotel_per_night_pkr": int(round(hotel_per_night)),
+        "breakdown_pkr": {
+            "hotels": int(round(hotels)),
+            "food": int(round(food)),
+            "local_transport": int(round(local)),
+            "fuel": int(round(fuel)),
+        },
+        "total_pkr": int(round(total)),
     }
 
 
@@ -183,18 +191,18 @@ def check_feasibility(route, cost, budget, days, month):
         problems.append(f"Trip needs ~{days_needed} days but only {days} available.")
         suggestions.append(f"Add ~{days_needed - days} days, or drop the farthest stop ({farthest}).")
 
-    # 3) BUDGET — can they afford at least the cheapest version?
-    total_lo, total_hi = cost["total_pkr"]
-    if budget < total_lo:
+    # 3) BUDGET — does the estimated cost fit the budget?
+    total = cost["total_pkr"]
+    if budget < total:
         budget_status = "over_budget"
-        problems.append(f"Cheapest plan is ~{total_lo:,} PKR but budget is {budget:,} PKR.")
-        suggestions.append("Drop a stop, shorten the trip, or raise the budget.")
-    elif budget < total_hi:
-        budget_status = "tight"   # affordable at the budget end of the ranges
+        problems.append(f"Estimated cost ~{total:,} PKR but budget is {budget:,} PKR.")
+        suggestions.append("Drop a stop, shorten the trip, pick a cheaper stay tier, or raise the budget.")
+    elif budget < total * 1.2:
+        budget_status = "tight"
     else:
         budget_status = "comfortable"
 
-    feasible = not out_of_season and time_ok and budget >= total_lo
+    feasible = not out_of_season and time_ok and budget >= total
 
     return {
         "feasible": feasible,
@@ -202,8 +210,7 @@ def check_feasibility(route, cost, budget, days, month):
         "season": {"out_of_season": [s["name"] for s in out_of_season]},
         "time": {"days_available": days, "days_needed": days_needed,
                  "drive_days": drive_days, "stop_days": stop_days, "ok": time_ok},
-        "budget": {"budget_pkr": budget, "trip_cost_pkr": [total_lo, total_hi],
-                   "status": budget_status},
+        "budget": {"budget_pkr": budget, "trip_cost_pkr": total, "status": budget_status},
         "problems": problems,
         "suggestions": suggestions,
     }

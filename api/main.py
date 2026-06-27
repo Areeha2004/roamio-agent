@@ -53,6 +53,7 @@ class PlanRequest(BaseModel):
     groupType: str                       # Solo | Couple | Friends | Family
     vibe: str                            # Adventure | Chill | Photography | Religious
     month: int = Field(ge=1, le=12)
+    stayStyle: str = "standard"          # budget | standard | luxury (optional)
 
 
 @app.get("/health")
@@ -69,6 +70,7 @@ def _to_request(req: PlanRequest) -> dict:
         "group_type": req.groupType.lower(),
         "vibe": req.vibe,
         "month": req.month,
+        "style": (req.stayStyle or "standard").lower(),
     }
 
 

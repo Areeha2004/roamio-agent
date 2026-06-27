@@ -68,7 +68,7 @@ def plan_node(state: TripState) -> dict:
     """ROUTE → COST → FEASIBILITY for the current set of stops."""
     req = state["request"]
     route = build_route(state["stops"], req["start_city"])
-    cost = estimate_cost(route, req["group_type"], req["days"])
+    cost = estimate_cost(route, req["group_type"], req["days"], req.get("style", "standard"))
     feas = check_feasibility(route, cost, req["budget_pkr"], req["days"], req["month"])
     return {"route": route, "cost": cost, "feasibility": feas}
 
@@ -181,7 +181,7 @@ def _summary(itin):
     s = itin["summary"]
     print(f"  title:    {s['title']}")
     print(f"  stops:    {', '.join(s['destinations']) or '(none)'}")
-    print(f"  feasible: {s['feasible']}  | cost {s['total_cost_pkr'][0]:,}-{s['total_cost_pkr'][1]:,} PKR")
+    print(f"  feasible: {s['feasible']}  | cost {s['total_cost_pkr']:,} PKR")
     for note in itin["meta"].get("replan_notes", []):
         print(f"  re-plan:  {note}")
     for w in itin["warnings"]:

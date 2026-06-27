@@ -5,7 +5,7 @@ import {
   MapPin, Calendar, Users, Camera, Mountain,
   Compass, Check, ArrowRight, ChevronDown, ChevronUp, Minus, Plus,
   AlertTriangle, Sun, Share2, Edit3, Sparkles, Clock, Wallet,
-  Navigation, Coffee, Tent, Church, Wind, Leaf
+  Navigation, Coffee, Tent, Church, Wind, Leaf, Fuel
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -20,6 +20,7 @@ interface PlanForm {
   groupType: GroupType | null;
   vibe: VibeType | null;
   month: number;
+  stayStyle: "budget" | "standard" | "luxury";
 }
 
 // ─── Palette constants ────────────────────────────────────────────────────────
@@ -42,9 +43,11 @@ const SAMPLE_TRIP = {
   vibe: "Adventure",
   totalCost: 112500,
   perDayCost: 22500,
-  transport: 38000,
   accommodation: 47500,
   food: 27000,
+  localTransport: 18000,
+  fuel: 20000,
+  stayStyle: "Standard",
   bestSeason: "May – September",
   currentSeasonWarning: "June is peak season — book accommodation 2–3 weeks in advance.",
   permitRequired: true,
@@ -134,14 +137,13 @@ const SAMPLE_TRIP = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const midpoint = (range: number[]) => Math.round((range[0] + range[1]) / 2);
 
 // Map the backend itinerary JSON (ITINERARY_SCHEMA) to the shape ItineraryPage renders.
 // Numbers/facts come straight from the API; a few display-only fields are derived.
 export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
   const req = api.request;
   const cb = api.cost_breakdown_pkr;
-  const totalCost = midpoint(api.summary.total_cost_pkr);
+  const totalCost = api.summary.total_cost_pkr;  // single number (tier-based)
   const perDay = Math.round(totalCost / Math.max(1, req.days));
   const warn = (t: string) => api.warnings.find((w: any) => w.type === t);
   const permit = warn("permit");
@@ -154,9 +156,11 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     vibe: cap(req.vibe),
     totalCost,
     perDayCost: perDay,
-    transport: midpoint(cb.local_transport) + midpoint(cb.long_haul_transport),
-    accommodation: midpoint(cb.hotels),
-    food: midpoint(cb.food),
+    accommodation: cb.hotels,
+    food: cb.food,
+    localTransport: cb.local_transport,
+    fuel: cb.fuel,
+    stayStyle: cap(req.style || "standard"),
     bestSeason: api.summary.feasible ? "In season for your dates" : "Check seasonal access",
     currentSeasonWarning: (warn("season")?.text || warn("info")?.text || ""),
     liveConditions: api.warnings.filter((w: any) => w.type === "live").map((w: any) => w.text),
@@ -214,6 +218,12 @@ const VIBES: { label: VibeType; icon: typeof Mountain; desc: string }[] = [
   { label: "Chill", icon: Wind, desc: "Relax & unwind" },
   { label: "Photography", icon: Camera, desc: "Capture every frame" },
   { label: "Religious", icon: Church, desc: "Spiritual journey" },
+];
+
+const STAY_STYLES = [
+  { value: "budget" as const, label: "Budget", hint: "~PKR 3–5k/night" },
+  { value: "standard" as const, label: "Standard", hint: "~PKR 7–10k/night" },
+  { value: "luxury" as const, label: "Luxury", hint: "~PKR 12–18k/night" },
 ];
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
@@ -709,6 +719,7 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
     groupType: null,
     vibe: null,
     month: 7,
+    stayStyle: "standard",
   });
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -807,6 +818,30 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
                 ≈ {formatPKR(Math.round(form.budget / form.days))} / day
               </span>
               <span>PKR 5,00,000</span>
+            </div>
+          </div>
+
+          {/* Stay style */}
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <label className="block text-sm font-semibold text-foreground mb-1" style={{ fontFamily: "Sora, sans-serif" }}>
+              Where will you stay?
+            </label>
+            <p className="text-xs text-muted-foreground mb-4">Sets your hotel & food level — drives the cost estimate.</p>
+            <div className="grid grid-cols-3 gap-3">
+              {STAY_STYLES.map(({ value, label, hint }) => (
+                <button
+                  key={value}
+                  onClick={() => setForm(f => ({ ...f, stayStyle: value }))}
+                  className="flex flex-col items-start gap-1 px-3 py-3 rounded-xl border-2 text-left transition-all duration-150"
+                  style={{
+                    borderColor: form.stayStyle === value ? P.fern : "var(--border)",
+                    background: form.stayStyle === value ? `${P.fern}12` : "var(--muted)",
+                  }}
+                >
+                  <span className="text-sm font-semibold" style={{ color: form.stayStyle === value ? P.hunterGreen : "var(--foreground)", fontFamily: "Sora, sans-serif" }}>{label}</span>
+                  <span className="text-[10px] text-muted-foreground">{hint}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -1054,6 +1089,7 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
               { icon: MapPin, text: `From ${trip.startCity}` },
               { icon: Users, text: trip.groupType },
               { icon: Mountain, text: trip.vibe },
+              { icon: Tent, text: `${trip.stayStyle} stay` },
             ].map(({ icon: Icon, text }) => (
               <span key={text} className="flex items-center gap-1.5">
                 <Icon size={13} style={{ color: P.fern }} />
@@ -1089,13 +1125,14 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
             </div>
           </div>
           <div
-            className="grid grid-cols-3 gap-3 pt-4"
+            className="grid grid-cols-4 gap-3 pt-4"
             style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
           >
             {[
-              { label: "Transport", value: trip.transport, icon: Navigation },
               { label: "Hotels", value: trip.accommodation, icon: Tent },
               { label: "Food", value: trip.food, icon: Coffee },
+              { label: "Local", value: trip.localTransport, icon: Navigation },
+              { label: "Fuel", value: trip.fuel, icon: Fuel },
             ].map(({ label, value, icon: Icon }) => (
               <div key={label} className="text-center">
                 <Icon size={13} className="mx-auto mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }} />
