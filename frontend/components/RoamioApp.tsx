@@ -54,6 +54,14 @@ const SAMPLE_TRIP = {
   permitNote: "NOC permit required for Gilgit-Baltistan (Hunza & upper KKH). Apply online via the Ministry of Interior portal at least 10–14 days before departure.",
   liveConditions: ["Karakoram Highway is open and clear", "Pleasant summer weather expected in the valleys"],
   shareId: "",
+  routeSummary: {
+    legs: [
+      { from: "Islamabad", to: "Naran", hours: 9, via: "via Mansehra & Balakot" },
+      { from: "Naran", to: "Hunza", hours: 8, via: "via Babusar Pass & the KKH" },
+    ],
+    roundTripHours: 36,
+  },
+  tips: ["Carry cash — ATMs are scarce up north", "Book stays ahead in peak season", "Pack warm layers even in summer"],
   days_data: [
     {
       day: 1,
@@ -167,6 +175,11 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     permitRequired: !!permit,
     permitNote: permit?.text || "",
     shareId: api.meta?.share_id || "",
+    routeSummary: {
+      legs: (api.route_summary?.legs || []).map((l: any) => ({ from: l.from, to: l.to, hours: l.hours, via: l.via })),
+      roundTripHours: api.route_summary?.round_trip_hours || 0,
+    },
+    tips: api.tips || [],
     days_data: api.days.map((d: any) => ({
       day: d.day,
       destination: d.title,
@@ -1145,6 +1158,26 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
           </div>
         </div>
 
+        {/* Route */}
+        {trip.routeSummary && trip.routeSummary.legs.length > 0 && (
+          <div className="rounded-2xl p-5 mb-3 bg-card border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Navigation size={15} style={{ color: P.fern }} />
+              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Route · ~{trip.routeSummary.roundTripHours}h round trip
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {trip.routeSummary.legs.map((l, i) => (
+                <div key={i} className="flex flex-wrap items-baseline gap-x-2 text-sm">
+                  <span className="font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>{l.from} → {l.to}</span>
+                  <span className="text-xs text-muted-foreground">~{l.hours}h{l.via ? ` · ${l.via}` : ""}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Live Conditions Banner */}
         {trip.liveConditions && trip.liveConditions.length > 0 && (
           <div
@@ -1292,6 +1325,24 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
             </div>
           </div>
         </div>
+
+        {/* Tips */}
+        {trip.tips && trip.tips.length > 0 && (
+          <div className="rounded-2xl p-5 mb-8 bg-card border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles size={15} style={{ color: P.amberHoney }} />
+              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Good to know</span>
+            </div>
+            <ul className="space-y-1.5">
+              {trip.tips.map((t, i) => (
+                <li key={i} className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
+                  <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: P.amberHoney }} />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="space-y-4">

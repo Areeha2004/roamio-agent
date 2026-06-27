@@ -83,6 +83,18 @@ def build_route(stop_ids, start_city="Islamabad"):
     farthest = max((_hours_from_islamabad(_corpus[sid]) for sid in ordered), default=0)
     est_round_trip = round(2 * (origin_hours + farthest), 1)
 
+    # Human-readable route legs with the "via" road description (for the UI/writer).
+    legs = []
+    if origin_hours > 0:
+        legs.append({"from": start_city, "to": "Islamabad", "hours": origin_hours, "via": origin_note})
+    for sid in ordered:
+        d = _corpus[sid]
+        legs.append({
+            "from": "Islamabad", "to": d["name"],
+            "hours": _hours_from_islamabad(d),
+            "via": d["drive_times"]["from_islamabad"].get("note", ""),
+        })
+
     return {
         "start_city": start_city,
         "ordered_stops": [
@@ -90,6 +102,7 @@ def build_route(stop_ids, start_city="Islamabad"):
              "hours_from_start": round(origin_hours + _hours_from_islamabad(_corpus[sid]), 1)}
             for sid in ordered
         ],
+        "legs": legs,
         "est_round_trip_drive_hours": est_round_trip,
         "unknown_ids": unknown,
         "warnings": warnings,

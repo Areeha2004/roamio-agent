@@ -60,7 +60,10 @@ def _trip_facts(request, route):
         f"Trip length: EXACTLY {request['days']} days (produce exactly {request['days']} day objects)",
         f"Group: {request['group_type']}; vibe: {request['vibe']}",
         f"Total round-trip driving: ~{route['est_round_trip_drive_hours']} hours "
-        f"(long mountain days; a common overnight waypoint is Chilas)",
+        f"(keep daily driving realistic — max ~10h/day; overnight at a waypoint like Chilas on long hauls)",
+        "Route legs (mention the road on travel days):",
+        *[f"  - {l['from']} -> {l['to']}: ~{l['hours']}h" + (f" ({l['via']})" if l.get("via") else "")
+          for l in route.get("legs", [])],
         "Destinations in order, with the ONLY activities you may use for each:",
     ]
     for s in route["ordered_stops"]:
@@ -82,7 +85,8 @@ _SYSTEM = (
     "a riverside walk, a sunrise viewpoint, leisure time). Do NOT invent specific NAMED "
     "places that are not in the provided list — generic experiences are fine, fabricated "
     "landmarks are not. Do not mention prices (costs are added separately). Write a warm, "
-    "specific 1-2 sentence note for each day."
+    "specific 1-2 sentence note for each day. On TRAVEL days, name the road taken (e.g. 'via "
+    "the Karakoram Highway') and keep daily driving realistic — at most ~10 hours per day."
 )
 
 
@@ -110,13 +114,29 @@ def _build_warnings(route):
             if text and text not in seen:
                 seen.add(text)
                 warnings.append({"type": wtype, "text": text})
-        # one practical tip per stop
-        if d["tips"]:
-            tip = d["tips"][0]
+    return warnings
+
+
+def _build_tips(route):
+    """All practical tips from the visited stops (deduped)."""
+    tips, seen = [], set()
+    for s in route["ordered_stops"]:
+        for tip in _corpus[s["id"]]["tips"]:
             if tip not in seen:
                 seen.add(tip)
-                warnings.append({"type": "info", "text": tip})
-    return warnings
+                tips.append(tip)
+    return tips
+
+
+def _build_route_summary(route):
+    """Grounded route legs (from / to / hours / via) + total round-trip hours."""
+    return {
+        "legs": [
+            {"from": l["from"], "to": l["to"], "hours": l["hours"], "via": l.get("via", "")}
+            for l in route.get("legs", [])
+        ],
+        "round_trip_hours": route["est_round_trip_drive_hours"],
+    }
 
 
 def write_itinerary(request, route, cost, feasibility):
@@ -159,11 +179,13 @@ def write_itinerary(request, route, cost, feasibility):
             "headline": draft.headline,
         },
         "warnings": _build_warnings(route),
+        "route_summary": _build_route_summary(route),
+        "tips": _build_tips(route),
         "days": days,
         "cost_breakdown_pkr": {**cost["breakdown_pkr"], "total": cost["total_pkr"]},
         "meta": {
             "share_id": None,
-            "disclaimer": "Costs are estimates stored as ranges — verify current prices before booking.",
+            "disclaimer": "Costs are estimates — verify current prices before booking.",
         },
     }
 
