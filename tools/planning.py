@@ -53,7 +53,7 @@ def _hours_from_islamabad(dest):
 
 def _origin_leg(start_city):
     """Returns (hours_to_hub, note, side) or None if the city isn't in the table."""
-    key = start_city.strip().lower()
+    key = start_city.strip().lower().replace(" ", "_")  # "Rahim Yar Khan" -> "rahim_yar_khan"
     if key in _origins:
         o = _origins[key]
         return o["hours_to_hub"], o["note"], o.get("side", "south")

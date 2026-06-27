@@ -219,8 +219,10 @@ function applyTweak(form: PlanForm, tweak: string): PlanForm {
 }
 
 const CITIES = [
-  "Islamabad", "Lahore", "Karachi", "Peshawar",
-  "Quetta", "Multan", "Faisalabad", "Gilgit",
+  "Islamabad", "Rawalpindi", "Lahore", "Karachi", "Peshawar", "Faisalabad",
+  "Multan", "Quetta", "Sialkot", "Gujranwala", "Gujrat", "Hyderabad",
+  "Bahawalpur", "Sargodha", "Abbottabad", "Mansehra", "Jhelum", "Muzaffarabad",
+  "Mirpur", "Sukkur", "Swat", "Gilgit", "Skardu", "Rahim Yar Khan",
 ];
 
 const GROUP_TYPES: { label: GroupType; icon: string }[] = [
@@ -1149,6 +1151,20 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
           </div>
         </div>
 
+        {/* Photo galleries */}
+        {trip.destinationNames.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <span className="text-xs text-muted-foreground flex items-center gap-1"><Camera size={12} /> Galleries:</span>
+            {trip.destinationNames.map((name) => (
+              <a key={"g-" + name} target="_blank" rel="noopener noreferrer"
+                 href={`https://unsplash.com/s/photos/${encodeURIComponent(name + " pakistan")}`}
+                 className="text-xs font-semibold px-2.5 py-1 rounded-full border border-border hover:border-primary/50 transition-colors text-foreground">
+                {name}
+              </a>
+            ))}
+          </div>
+        )}
+
         {/* Cost Summary */}
         <div
           className="rounded-2xl p-6 mb-4"
@@ -1394,13 +1410,6 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
                  href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name + ", Pakistan")}`}
                  className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
                 <Tent size={12} /> Hotels in {name}
-              </a>
-            ))}
-            {trip.destinationNames.map((name) => (
-              <a key={"g-" + name} target="_blank" rel="noopener noreferrer"
-                 href={`https://unsplash.com/s/photos/${encodeURIComponent(name + " pakistan")}`}
-                 className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
-                <Camera size={12} /> {name} gallery
               </a>
             ))}
             <a target="_blank" rel="noopener noreferrer" href="https://www.daewoo.com.pk/"
