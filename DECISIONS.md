@@ -184,3 +184,113 @@ emit a warning that their estimate is an upper bound (the safe direction for
 feasibility). **Takeaway:** scope a tool to where its approximation is valid and flag
 the boundary, rather than chase a more complex model that's still incorrect. A real
 fix would need a road graph — out of scope for v0.
+
+---
+
+## 007 · Refactor the deterministic orchestrator into a LangGraph state machine
+**Date:** 2026-06-25 (post-v0) · **Area:** Architecture / agent
+
+**Challenge.** The planning pipeline (search → route → cost → feasibility → re-plan →
+write) first shipped as a plain Python function with a `while` loop. It worked and was
+the right way to *ship*, but it skipped the framework skill the project exists to teach,
+and didn't expose the hooks needed for streaming and memory.
+
+**Decision.** Re-expressed the exact same flow as a LangGraph `StateGraph`: each tool a
+node, the re-plan as a **conditional edge** (`decide()`: feasible → write, else → replan
+→ plan). `generate_itinerary()` now runs the compiled graph. Behaviour and output are
+identical — it's a lateral move on purpose.
+
+**Why.** A `while` loop and a graph produce the same itinerary, so the value isn't the
+result — it's what the framework *unlocks*: node-by-node **streaming** to the UI,
+**checkpointing/memory**, a diagram you can draw in an interview, and clean extensibility
+(the Tavily node slotted in as one more edge). It's also the canonical "agent" shape: the
+conditional loop-back IS the agent.
+
+**Takeaway.** Ship the simple deterministic version first to prove the logic, then adopt
+the framework for the capabilities (and learning) it adds — not because the framework
+makes the answer better. Know *why* you're paying the abstraction cost.
+
+---
+
+## 008 · Loosen activity grounding — let the LLM enrich days, keep facts grounded
+**Date:** 2026-06-22 (Week 2) · **Area:** LLM grounding / product
+
+**Challenge.** Strict grounding (drop any activity not in the corpus) made day cards
+feel thin — 1-2 activities per day — because the corpus lists only a handful of named
+landmarks per destination.
+
+**Decision.** Relaxed the rule for *activities only*: the writer may add generic
+experiences (a local meal, a bazaar stroll, a riverside walk) alongside the corpus
+landmarks, but is forbidden from inventing **named** places. Trust-critical data
+(costs, permits, route, season) stays 100% grounded.
+
+**Why.** Activities are *suggestions*, not booking-critical facts, so the grounding bar
+can be lower there than for a price or a permit rule. Generic experiences can't be
+"wrong" the way a fabricated fort would be. This fills out the days without reintroducing
+hallucination risk where it actually matters.
+
+**Takeaway.** Grounding isn't all-or-nothing — set the strictness per field by how much a
+user would *trust* it. Tier your guarantees: facts locked, flavour free.
+
+---
+
+## 009 · Cost as tiers (budget/standard/luxury), not a min–max range
+**Date:** 2026-06-27 (post-v0) · **Area:** Cost model / UX
+
+**Challenge.** Returning costs as a wide `[min, max]` range confused users ("is this per
+day? per person? the whole trip?") and gave no way to express *how* they want to travel.
+
+**Decision.** Added a **stay-tier** input (budget / standard / luxury). The tier sets
+where in each destination's cost range hotels and food land (low/mid/high); local
+transport and fuel are tier-independent. Output is now a **single** number with a real
+per-component breakdown (hotels / food / local / fuel) — and the form shows approximate
+per-night PKR per tier.
+
+**Why.** A single tier-anchored number is far clearer than a range, and the tier finally
+resolves the long-deferred "where in the range?" question with an actual user input rather
+than a guess. The per-component breakdown answers "what am I paying for?" honestly.
+
+**Takeaway.** When a range confuses users, the fix is often a *new input* that collapses
+it to a meaningful single value — not better wording on the range.
+
+---
+
+## 010 · Tag re-ranking — make the destination choice reflect the inputs
+**Date:** 2026-06-27 (post-v0) · **Area:** RAG / retrieval quality
+
+**Challenge.** One destination (Naran & Kaghan) ranked #1 for *every* query — adventure,
+culture, lakes, even "religious." Its corpus text is a generic-match magnet, so pure
+semantic similarity always returned it, and short (single-stop) trips always showed it.
+
+**Decision.** After semantic retrieval, **re-rank** candidates by how many of the
+requested vibes/interests overlap each destination's `tags`, breaking ties by embedding
+distance. Also made vibe multi-select and added an interests picker so there's real signal
+to match on.
+
+**Why.** Pure cosine similarity rewards generically-dense text. Re-ranking by explicit
+tag overlap makes the *inputs* decide — "culture + heritage" now surfaces Chitral/Kalash,
+"forests + waterfalls" surfaces Kumrat. It's a cheap hybrid (semantic recall + structured
+precision) that fixed the single most-visible quality bug.
+
+**Takeaway.** Pure vector search can be quietly biased toward verbose entries. A light
+structured re-rank on top of semantic recall is often the difference between "feels
+generic" and "feels like it understood me."
+
+---
+
+## 011 · Logistics as deep-links — suggest, don't book
+**Date:** 2026-06-27 (post-v0) · **Area:** Product / integrations
+
+**Challenge.** Users wanted hotel/transport booking in the itinerary. Real booking
+integrations are the fragile third-party trap the project deliberately avoids.
+
+**Decision.** Added a "Plan your logistics" section of **deep-links** — Booking.com
+search per destination, Daewoo/Faisal Movers for buses, a jeep-hire search, flights to
+the nearest northern airport — generated from the trip's own data. No APIs, no bookings.
+
+**Why.** Deep-links give users the practical next step (where to actually book) with zero
+integration surface, zero runtime dependency, and zero maintenance — and they're a clean
+affiliate-revenue path later. Stays true to the "suggests, does not book" moat.
+
+**Takeaway.** "Useful" doesn't require "integrated." A well-targeted external link often
+delivers most of the value of an integration at none of the fragility.
