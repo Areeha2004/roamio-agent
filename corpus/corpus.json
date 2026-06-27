@@ -5,6 +5,7 @@
     "region": "Gilgit-Baltistan",
     "tags": ["mountains", "scenic", "adventure", "photography", "culture"],
     "description": "Pakistan's most iconic mountain valley — dramatic Karakoram peaks, historic forts, and the turquoise Attabad Lake, reached via the Karakoram Highway.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Hunza_Valley_HDR.jpg/1280px-Hunza_Valley_HDR.jpg",
     "recommended_trip_days": { "min": 3, "ideal": 5 },
     "drive_times": {
       "from_islamabad": { "min_hours": 14, "max_hours": 18, "note": "by road (KKH), usually split over 2 days with an overnight in Chilas or Gilgit" },
@@ -38,6 +39,7 @@
     "region": "Gilgit-Baltistan",
     "tags": ["mountains", "lakes", "desert", "trekking", "adventure", "photography"],
     "description": "Gateway to the high Karakoram and K2 — alpine lakes, the vast Deosai plateau, cold deserts, and Balti forts, set on the Indus River.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Shangrila_resort_skardu.jpg/1280px-Shangrila_resort_skardu.jpg",
     "recommended_trip_days": { "min": 3, "ideal": 6 },
     "drive_times": {
       "from_islamabad": { "min_hours": 14, "max_hours": 18, "note": "by road (KKH to Jaglot, then the Skardu road), usually split over 2 days with an overnight in Chilas" },
@@ -70,6 +72,7 @@
     "region": "Khyber Pakhtunkhwa",
     "tags": ["mountains", "lakes", "scenic", "family", "adventure"],
     "description": "The classic Kaghan Valley summer escape — alpine Lake Saif-ul-Malook, green meadows at Shogran, and the high Babusar Pass; hugely popular with families.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Siri_Paye%2C_Shogran%2C_Kaghan_Valley.jpg/1280px-Siri_Paye%2C_Shogran%2C_Kaghan_Valley.jpg",
     "recommended_trip_days": { "min": 2, "ideal": 4 },
     "drive_times": {
       "from_islamabad": { "min_hours": 6, "max_hours": 9, "note": "via Mansehra and Balakot; mostly paved, slow above Kaghan" },
@@ -99,6 +102,7 @@
     "region": "Khyber Pakhtunkhwa",
     "tags": ["mountains", "green", "valleys", "family", "culture", "waterfalls", "heritage", "skiing"],
     "description": "The 'Switzerland of Pakistan' — green valleys along the Swat River, Buddhist heritage, the upper resort of Kalam, and the ski slopes of Malam Jabba; accessible and family-friendly.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Mahodand_l.jpg/1280px-Mahodand_l.jpg",
     "recommended_trip_days": { "min": 2, "ideal": 4 },
     "drive_times": {
       "from_islamabad": { "min_hours": 5, "max_hours": 7, "note": "via the M-1 motorway to Mardan, then up to Mingora; upper Swat (Kalam) adds 3-4 hrs" },
@@ -128,6 +132,7 @@
     "region": "Punjab / KP (Galiyat)",
     "tags": ["hills", "chill", "family", "accessible", "viewpoints", "pine-forests"],
     "description": "The closest hill stations to Islamabad — pine-covered ridges, Mall Road, and the forest trails of the Galiyat; an easy, relaxed family weekend escape rather than a remote adventure.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Sunset_in_hills_-_Holy_Trinity_Church%2C_Murree.jpg/1280px-Sunset_in_hills_-_Holy_Trinity_Church%2C_Murree.jpg",
     "recommended_trip_days": { "min": 1, "ideal": 2 },
     "drive_times": {
       "from_islamabad": { "min_hours": 1.5, "max_hours": 3, "note": "~1-1.5 hrs to Murree via the Expressway; longer in weekend/holiday traffic" },

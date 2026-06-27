@@ -5,7 +5,7 @@ import {
   MapPin, Calendar, Users, Camera, Mountain,
   Compass, Check, ArrowRight, ChevronDown, ChevronUp, Minus, Plus,
   AlertTriangle, Sun, Share2, Edit3, Sparkles, Clock, Wallet,
-  Navigation, Coffee, Tent, Church, Wind, Leaf, Fuel
+  Navigation, Coffee, Tent, Church, Wind, Leaf, Fuel, Plane
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -54,6 +54,8 @@ const SAMPLE_TRIP = {
   permitNote: "NOC permit required for Gilgit-Baltistan (Hunza & upper KKH). Apply online via the Ministry of Interior portal at least 10–14 days before departure.",
   liveConditions: ["Karakoram Highway is open and clear", "Pleasant summer weather expected in the valleys"],
   shareId: "",
+  heroImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Hunza_Valley_HDR.jpg/1280px-Hunza_Valley_HDR.jpg",
+  destinationNames: ["Hunza Valley", "Skardu"],
   routeSummary: {
     legs: [
       { from: "Islamabad", to: "Naran", hours: 9, via: "via Mansehra & Balakot" },
@@ -175,6 +177,8 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     permitRequired: !!permit,
     permitNote: permit?.text || "",
     shareId: api.meta?.share_id || "",
+    heroImage: api.summary.hero_image || "",
+    destinationNames: api.summary.destination_names || [],
     routeSummary: {
       legs: (api.route_summary?.legs || []).map((l: any) => ({ from: l.from, to: l.to, hours: l.hours, via: l.via })),
       roundTripHours: api.route_summary?.round_trip_hours || 0,
@@ -1086,6 +1090,18 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
     <div className="min-h-screen bg-background pt-16">
       <div className="max-w-2xl mx-auto px-6 py-12">
 
+        {/* Hero image */}
+        {trip.heroImage && (
+          <div className="rounded-2xl overflow-hidden mb-6 h-44 md:h-60 bg-muted">
+            <img
+              src={trip.heroImage}
+              alt={trip.title}
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }}
+            />
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-3">
@@ -1343,6 +1359,41 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
             </ul>
           </div>
         )}
+
+        {/* Logistics */}
+        <div className="rounded-2xl p-5 mb-8 bg-card border border-border">
+          <div className="flex items-center gap-2 mb-1">
+            <Navigation size={15} style={{ color: P.fern }} />
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Plan your logistics</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-3">Roamio suggests — you book directly. Links open external sites.</p>
+          <div className="flex flex-wrap gap-2">
+            {trip.destinationNames.map((name) => (
+              <a key={name} target="_blank" rel="noopener noreferrer"
+                 href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name + ", Pakistan")}`}
+                 className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
+                <Tent size={12} /> Hotels in {name}
+              </a>
+            ))}
+            <a target="_blank" rel="noopener noreferrer" href="https://www.daewoo.com.pk/"
+               className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
+              <Navigation size={12} /> Bus · Daewoo
+            </a>
+            <a target="_blank" rel="noopener noreferrer" href="https://www.faisalmovers.com/"
+               className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
+              <Navigation size={12} /> Bus · Faisal Movers
+            </a>
+            <a target="_blank" rel="noopener noreferrer"
+               href={`https://www.google.com/search?q=${encodeURIComponent("4x4 jeep hire " + trip.startCity + " northern Pakistan")}`}
+               className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
+              <Compass size={12} /> Car / jeep hire
+            </a>
+            <a target="_blank" rel="noopener noreferrer" href="https://www.google.com/travel/flights?q=flights%20to%20Skardu"
+               className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
+              <Plane size={12} /> Flights north
+            </a>
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="space-y-4">

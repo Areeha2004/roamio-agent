@@ -160,6 +160,7 @@ def write_itinerary(request, route, cost, feasibility):
             "to": d.to_place if not is_stay else None,
             "drive_hours": d.drive_hours if not is_stay else 0,
             "stop_id": d.stop_id if is_stay else None,
+            "image": _corpus.get(d.stop_id, {}).get("image", "") if is_stay else "",
             # Activities are LLM-enriched (landmarks from corpus + generic experiences).
             # We no longer drop non-corpus items, so days feel full; the prompt forbids
             # inventing NAMED places. Trust-critical data (costs/permits/route) stays grounded.
@@ -168,12 +169,15 @@ def write_itinerary(request, route, cost, feasibility):
         })
 
     # 3) Inject the trustworthy numbers/facts from the tools + corpus.
+    primary = route["ordered_stops"][-1]["id"] if route["ordered_stops"] else None
     return {
         "request": request,
         "summary": {
             "title": draft.title,
             "feasible": feasibility["feasible"],
             "destinations": [s["id"] for s in route["ordered_stops"]],
+            "destination_names": [s["name"] for s in route["ordered_stops"]],
+            "hero_image": _corpus.get(primary, {}).get("image", "") if primary else "",
             "total_cost_pkr": cost["total_pkr"],
             "total_drive_hours": route["est_round_trip_drive_hours"],
             "headline": draft.headline,
