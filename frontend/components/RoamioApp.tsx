@@ -1090,28 +1090,49 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
     <div className="min-h-screen bg-background pt-16">
       <div className="max-w-2xl mx-auto px-6 py-12">
 
-        {/* Hero image */}
-        {trip.heroImage && (
-          <div className="rounded-2xl overflow-hidden mb-6 h-44 md:h-60 bg-muted">
+        {/* Hero */}
+        {trip.heroImage ? (
+          <div className="relative rounded-2xl overflow-hidden mb-6 h-60 md:h-80 bg-muted">
             <img
               src={trip.heroImage}
               alt={trip.title}
               className="w-full h-full object-cover"
-              onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
             />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(26,31,22,0.9) 0%, rgba(26,31,22,0.25) 45%, transparent 72%)" }} />
+            <div className="absolute bottom-0 left-0 right-0 p-5 md:p-7">
+              <span className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.7)" }}>Your Itinerary</span>
+              <h1 className="text-2xl md:text-4xl font-bold text-white mt-1 mb-2.5" style={{ fontFamily: "Sora, sans-serif" }}>
+                {trip.title}
+              </h1>
+              {trip.destinationNames[0] && (
+                <a
+                  href={`https://unsplash.com/s/photos/${encodeURIComponent(trip.destinationNames[0] + " pakistan")}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold"
+                  style={{ color: "rgba(255,255,255,0.92)" }}
+                >
+                  <Camera size={13} /> Explore {trip.destinationNames[0]} photos →
+                </a>
+              )}
+            </div>
           </div>
-        )}
+        ) : null}
 
-        {/* Header */}
+        {/* Header (title lives on the hero when there's an image) */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: P.fern }}>Your Itinerary</span>
-            <span className="text-muted-foreground text-xs">·</span>
-            <span className="text-xs text-muted-foreground">Generated just now</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2" style={{ fontFamily: "Sora, sans-serif" }}>
-            {trip.title}
-          </h1>
+          {!trip.heroImage && (
+            <>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: P.fern }}>Your Itinerary</span>
+                <span className="text-muted-foreground text-xs">·</span>
+                <span className="text-xs text-muted-foreground">Generated just now</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2" style={{ fontFamily: "Sora, sans-serif" }}>
+                {trip.title}
+              </h1>
+            </>
+          )}
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             {[
               { icon: Calendar, text: `${trip.days} days` },
@@ -1373,6 +1394,13 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
                  href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name + ", Pakistan")}`}
                  className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
                 <Tent size={12} /> Hotels in {name}
+              </a>
+            ))}
+            {trip.destinationNames.map((name) => (
+              <a key={"g-" + name} target="_blank" rel="noopener noreferrer"
+                 href={`https://unsplash.com/s/photos/${encodeURIComponent(name + " pakistan")}`}
+                 className="text-xs font-semibold px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-1.5 text-foreground">
+                <Camera size={12} /> {name} gallery
               </a>
             ))}
             <a target="_blank" rel="noopener noreferrer" href="https://www.daewoo.com.pk/"

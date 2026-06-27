@@ -170,13 +170,16 @@ def write_itinerary(request, route, cost, feasibility):
 
     # 3) Inject the trustworthy numbers/facts from the tools + corpus.
     primary = route["ordered_stops"][-1]["id"] if route["ordered_stops"] else None
+    dest_names = [s["name"] for s in route["ordered_stops"]]
+    dest_str = " & ".join(dest_names) if dest_names else "Pakistan"
+    title = f"{request['days']}-Day {request.get('vibe', '').strip().title()} Trip to {dest_str}".replace("  ", " ").strip()
     return {
         "request": request,
         "summary": {
-            "title": draft.title,
+            "title": title,
             "feasible": feasibility["feasible"],
             "destinations": [s["id"] for s in route["ordered_stops"]],
-            "destination_names": [s["name"] for s in route["ordered_stops"]],
+            "destination_names": dest_names,
             "hero_image": _corpus.get(primary, {}).get("image", "") if primary else "",
             "total_cost_pkr": cost["total_pkr"],
             "total_drive_hours": route["est_round_trip_drive_hours"],
