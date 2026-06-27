@@ -51,9 +51,11 @@ class PlanRequest(BaseModel):
     budget: int = Field(ge=0)            # PKR
     startCity: str
     groupType: str                       # Solo | Couple | Friends | Family
-    vibe: str                            # Adventure | Chill | Photography | Religious
+    vibe: str                            # primary vibe (drives the title)
     month: int = Field(ge=1, le=12)
     stayStyle: str = "standard"          # budget | standard | luxury (optional)
+    interests: list[str] = []            # extra vibes/goals that enrich the search
+    exclude: list[str] = []              # destination names/ids to avoid ("somewhere else")
 
 
 @app.get("/health")
@@ -71,6 +73,8 @@ def _to_request(req: PlanRequest) -> dict:
         "vibe": req.vibe,
         "month": req.month,
         "style": (req.stayStyle or "standard").lower(),
+        "interests": [i.strip() for i in (req.interests or [])],
+        "exclude": [e.strip() for e in (req.exclude or [])],
     }
 
 

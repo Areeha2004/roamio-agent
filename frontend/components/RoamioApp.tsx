@@ -18,7 +18,9 @@ interface PlanForm {
   budget: number;
   startCity: string;
   groupType: GroupType | null;
-  vibe: VibeType | null;
+  vibes: VibeType[];
+  interests: string[];
+  exclude: string[];
   month: number;
   stayStyle: "budget" | "standard" | "luxury";
 }
@@ -211,10 +213,10 @@ function applyTweak(form: PlanForm, tweak: string): PlanForm {
   else if (/shorter|fewer days/.test(t)) f.days = Math.max(1, f.days - 2);
   if (/cheaper|lower budget|less expensive|reduce budget/.test(t)) f.budget = Math.max(10000, Math.round(f.budget * 0.8));
   if (/luxur|premium|higher budget|more comfort/.test(t)) f.budget = Math.round(f.budget * 1.3);
-  if (/photograph/.test(t)) f.vibe = "Photography";
-  if (/adventur/.test(t)) f.vibe = "Adventure";
-  if (/chill|relax/.test(t)) f.vibe = "Chill";
-  if (/religious|spiritual/.test(t)) f.vibe = "Religious";
+  if (/photograph/.test(t)) f.vibes = ["Photography"];
+  if (/adventur/.test(t)) f.vibes = ["Adventure"];
+  if (/chill|relax/.test(t)) f.vibes = ["Chill"];
+  if (/religious|spiritual/.test(t)) f.vibes = ["Religious"];
   return f;
 }
 
@@ -244,6 +246,8 @@ const STAY_STYLES = [
   { value: "standard" as const, label: "Standard", hint: "~PKR 7–10k/night" },
   { value: "luxury" as const, label: "Luxury", hint: "~PKR 12–18k/night" },
 ];
+
+const INTERESTS = ["Lakes", "Trekking", "Waterfalls", "Forests", "Culture", "Heritage", "Off-the-beaten-path", "Wildlife"];
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 const cn = (...classes: (string | boolean | undefined)[]) =>
@@ -736,7 +740,9 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
     budget: 75000,
     startCity: "Islamabad",
     groupType: null,
-    vibe: null,
+    vibes: [],
+    interests: [],
+    exclude: [],
     month: 7,
     stayStyle: "standard",
   });
@@ -745,7 +751,7 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
   const handleSubmit = () => {
     const errs: string[] = [];
     if (!form.groupType) errs.push("Please select a group type.");
-    if (!form.vibe) errs.push("Please select a trip vibe.");
+    if (!form.vibes.length) errs.push("Please select at least one trip vibe.");
     if (form.budget < 5000 * form.days)
       errs.push(`Budget too low for ${form.days} days. Minimum PKR ${(5000 * form.days).toLocaleString()}.`);
     if (errs.length) { setErrors(errs); return; }
@@ -931,33 +937,60 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
             </div>
           </div>
 
-          {/* Vibe */}
+          {/* Vibe (multi-select) */}
           <div className="bg-card border border-border rounded-2xl p-6">
             <label className="block text-sm font-semibold text-foreground mb-1" style={{ fontFamily: "Sora, sans-serif" }}>
-              Trip vibe
+              Trip vibe(s)
             </label>
-            <p className="text-xs text-muted-foreground mb-4">Choose what matters most to you.</p>
+            <p className="text-xs text-muted-foreground mb-4">Pick one or more — combining vibes gives more varied results.</p>
             <div className="grid grid-cols-2 gap-3">
-              {VIBES.map(({ label, icon: Icon, desc }) => (
-                <button
-                  key={label}
-                  onClick={() => setForm(f => ({ ...f, vibe: label }))}
-                  className="flex flex-col items-start gap-1.5 px-4 py-4 rounded-xl border-2 text-left transition-all duration-150"
-                  style={{
-                    borderColor: form.vibe === label ? P.fern : "var(--border)",
-                    background: form.vibe === label ? `${P.fern}12` : "var(--muted)",
-                  }}
-                >
-                  <Icon size={18} style={{ color: form.vibe === label ? P.fern : "var(--muted-foreground)" }} />
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: form.vibe === label ? P.hunterGreen : "var(--foreground)", fontFamily: "Sora, sans-serif" }}
+              {VIBES.map(({ label, icon: Icon, desc }) => {
+                const active = form.vibes.includes(label);
+                return (
+                  <button
+                    key={label}
+                    onClick={() => setForm(f => ({ ...f, vibes: active ? f.vibes.filter(v => v !== label) : [...f.vibes, label] }))}
+                    className="flex flex-col items-start gap-1.5 px-4 py-4 rounded-xl border-2 text-left transition-all duration-150"
+                    style={{
+                      borderColor: active ? P.fern : "var(--border)",
+                      background: active ? `${P.fern}12` : "var(--muted)",
+                    }}
+                  >
+                    <Icon size={18} style={{ color: active ? P.fern : "var(--muted-foreground)" }} />
+                    <span className="text-sm font-semibold" style={{ color: active ? P.hunterGreen : "var(--foreground)", fontFamily: "Sora, sans-serif" }}>
+                      {label}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">{desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Interests (multi-select) */}
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <label className="block text-sm font-semibold text-foreground mb-1" style={{ fontFamily: "Sora, sans-serif" }}>
+              Interests <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <p className="text-xs text-muted-foreground mb-4">What are you into? This steers the destination search.</p>
+            <div className="flex flex-wrap gap-2">
+              {INTERESTS.map((label) => {
+                const active = form.interests.includes(label);
+                return (
+                  <button
+                    key={label}
+                    onClick={() => setForm(f => ({ ...f, interests: active ? f.interests.filter(i => i !== label) : [...f.interests, label] }))}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-full border-2 transition-all duration-150"
+                    style={{
+                      borderColor: active ? P.fern : "var(--border)",
+                      background: active ? `${P.fern}12` : "var(--muted)",
+                      color: active ? P.hunterGreen : "var(--foreground)",
+                    }}
                   >
                     {label}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">{desc}</span>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1469,7 +1502,7 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
-              {["Make it cheaper", "+2 days", "Focus on photography", "Add a rest day"].map(s => (
+              {["Somewhere else", "Make it cheaper", "+2 days", "Add a rest day"].map(s => (
                 <button
                   key={s}
                   onClick={() => setTweakInput(s)}
@@ -1555,11 +1588,18 @@ export default function App() {
   const runPlan = async (form: PlanForm) => {
     setStatus("Starting…");
     setPage("loading");
+    const payload = {
+      days: form.days, budget: form.budget, startCity: form.startCity,
+      groupType: form.groupType, month: form.month, stayStyle: form.stayStyle,
+      vibe: form.vibes[0] || "Adventure",
+      interests: [...form.vibes.slice(1).map(v => v.toLowerCase()), ...form.interests.map(i => i.toLowerCase())],
+      exclude: form.exclude,
+    };
     try {
       const res = await fetch(`${API_URL}/generate-itinerary/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok || !res.body) throw new Error(`API ${res.status}`);
       const reader = res.body.getReader();
@@ -1598,7 +1638,16 @@ export default function App() {
   // "Tweak this trip": adjust the last form and re-plan (no infinite loading).
   const handleTweak = (tweak: string) => {
     if (!lastForm) { setPage("planner"); return; }
-    runPlan(applyTweak(lastForm, tweak));
+    let form = applyTweak(lastForm, tweak);
+    const t = tweak.toLowerCase();
+    // "somewhere else" / "different place" → exclude the current destinations
+    if (/other place|somewhere else|different (place|destination|spot)|change (the )?(destination|place)|elsewhere|new place/.test(t)) {
+      form = { ...form, exclude: [...form.exclude, ...trip.destinationNames] };
+    }
+    // "remove X" / "without X" → exclude a named place
+    const rm = t.match(/(?:remove|without|skip|exclude)\s+([a-z][a-z &]+)/);
+    if (rm && rm[1]) form = { ...form, exclude: [...form.exclude, rm[1].trim()] };
+    runPlan(form);
   };
 
   useEffect(() => {

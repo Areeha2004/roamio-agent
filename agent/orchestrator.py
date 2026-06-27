@@ -53,13 +53,19 @@ class TripState(TypedDict):
 
 # ── Nodes (each reads the state, returns the keys it updates) ─────────────────
 def search_node(state: TripState) -> dict:
-    """RETRIEVE: semantic search by vibe, keep in-season, pick a starting set."""
+    """RETRIEVE: search by vibe + interests, drop excluded & out-of-season, pick a set."""
     req = state["request"]
     month_name = MONTHS[req["month"]]
-    query = f"{req['vibe']} trip in northern Pakistan in {month_name}"
-    candidates = search_destinations(query, k=6)
+    interests = " ".join(req.get("interests", []))
+    query = f"{req['vibe']} {interests} trip in northern Pakistan in {month_name}".replace("  ", " ").strip()
+    candidates = search_destinations(query, k=8)
     in_season = [c for c in candidates if req["month"] in _corpus[c["id"]]["open_months"]]
     pool = in_season or candidates
+    # "show me somewhere else" / "remove X" — drop excluded destinations (by name or id)
+    exclude = {e.strip().lower() for e in req.get("exclude", [])}
+    if exclude:
+        kept = [c for c in pool if c["name"].lower() not in exclude and c["id"].lower() not in exclude]
+        pool = kept or pool  # never empty the pool entirely
     n = min(len(pool), 3, max(1, req["days"] // 3))
     return {"stops": [c["id"] for c in pool[:n]], "replan_count": 0, "replan_notes": []}
 
