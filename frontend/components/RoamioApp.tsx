@@ -247,7 +247,7 @@ const STAY_STYLES = [
   { value: "luxury" as const, label: "Luxury", hint: "~PKR 12–18k/night" },
 ];
 
-const INTERESTS = ["Lakes", "Trekking", "Waterfalls", "Forests", "Culture", "Heritage", "Off-the-beaten-path", "Wildlife"];
+const INTERESTS = ["Lakes", "Trekking", "Waterfalls", "Forests", "Glaciers", "Desert", "Camping", "Culture", "Heritage", "Festivals", "Off-the-beaten-path", "Wildlife"];
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 const cn = (...classes: (string | boolean | undefined)[]) =>
@@ -1647,6 +1647,13 @@ export default function App() {
     // "remove X" / "without X" → exclude a named place
     const rm = t.match(/(?:remove|without|skip|exclude)\s+([a-z][a-z &]+)/);
     if (rm && rm[1]) form = { ...form, exclude: [...form.exclude, rm[1].trim()] };
+    // exclude any currently-shown destination the user names (e.g. "no naran kaghan")
+    trip.destinationNames.forEach((name) => {
+      const first = name.split(/[\s&]+/)[0].toLowerCase();
+      if (t.includes(name.toLowerCase()) || (first.length > 3 && t.includes(first))) {
+        form = { ...form, exclude: [...form.exclude, name] };
+      }
+    });
     runPlan(form);
   };
 
