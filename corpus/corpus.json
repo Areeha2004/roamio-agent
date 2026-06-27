@@ -3,156 +3,1131 @@
     "id": "hunza-valley",
     "name": "Hunza Valley",
     "region": "Gilgit-Baltistan",
-    "tags": ["mountains", "scenic", "adventure", "photography", "culture"],
+    "tags": [
+      "mountains",
+      "scenic",
+      "adventure",
+      "photography",
+      "culture"
+    ],
     "description": "Pakistan's most iconic mountain valley — dramatic Karakoram peaks, historic forts, and the turquoise Attabad Lake, reached via the Karakoram Highway.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Hunza_Valley_HDR.jpg/1280px-Hunza_Valley_HDR.jpg",
-    "recommended_trip_days": { "min": 3, "ideal": 5 },
+    "recommended_trip_days": {
+      "min": 3,
+      "ideal": 5
+    },
     "drive_times": {
-      "from_islamabad": { "min_hours": 14, "max_hours": 18, "note": "by road (KKH), usually split over 2 days with an overnight in Chilas or Gilgit" },
-      "from_gilgit": { "min_hours": 2.5, "max_hours": 3, "note": "via KKH" },
+      "from_islamabad": {
+        "min_hours": 14,
+        "max_hours": 18,
+        "note": "by road (KKH), usually split over 2 days with an overnight in Chilas or Gilgit"
+      },
+      "from_gilgit": {
+        "min_hours": 2.5,
+        "max_hours": 3,
+        "note": "via KKH"
+      },
       "nearest_airport": "Gilgit Airport (GIL), then ~3 hr drive; flights weather-dependent"
     },
-    "open_months": [4, 5, 6, 7, 8, 9, 10],
+    "open_months": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
     "best_season": {
       "months": "April to October",
       "highlights": "Cherry blossom in early April; lush green summers; golden autumn foliage in October",
       "avoid": "December to February (heavy snow, KKH sections can close)"
     },
     "cost_ranges": {
-      "hotel_pkr_per_night": [3000,15000],
-      "food_pkr_per_day": [1500, 3000],
-      "local_transport_pkr_per_day": [3000, 6000],
+      "hotel_pkr_per_night": [
+        3000,
+        15000
+      ],
+      "food_pkr_per_day": [
+        1500,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        3000,
+        6000
+      ],
       "notes": "Karimabad has the widest range from guesthouses to boutique hotels"
     },
     "permits": "CNIC sufficient for Pakistani nationals. Foreigners do not need a permit for Hunza itself, but an NOC may be required for restricted border zones (e.g. Khunjerab/Shimshal area).",
-    "stays": ["Karimabad (central, most options)", "Aliabad", "Duikar/Eagle's Nest for sunrise views"],
-    "activities": ["Baltit Fort", "Altit Fort", "Attabad Lake (boating)", "Passu Cones viewpoint", "Eagle's Nest sunrise", "Khunjerab Pass day trip","Hopper Glacier",
-"Borith Lake",
-"Hussaini Suspension Bridge"],
-    "tips": ["Carry cash — ATMs are scarce and unreliable", "Book ahead in peak season (April blossom, summer)", "Mobile signal is patchy; SCOM/Telenor work best", "Days are cold even in summer — pack layers","Fuel up before entering remote valleys",
-"Carry warm clothing even in July"]
+    "stays": [
+      "Karimabad (central, most options)",
+      "Aliabad",
+      "Duikar/Eagle's Nest for sunrise views"
+    ],
+    "activities": [
+      "Baltit Fort",
+      "Altit Fort",
+      "Attabad Lake (boating)",
+      "Passu Cones viewpoint",
+      "Eagle's Nest sunrise",
+      "Khunjerab Pass day trip",
+      "Hopper Glacier",
+      "Borith Lake",
+      "Hussaini Suspension Bridge"
+    ],
+    "tips": [
+      "Carry cash — ATMs are scarce and unreliable",
+      "Book ahead in peak season (April blossom, summer)",
+      "Mobile signal is patchy; SCOM/Telenor work best",
+      "Days are cold even in summer — pack layers",
+      "Fuel up before entering remote valleys",
+      "Carry warm clothing even in July"
+    ]
   },
-
   {
     "id": "skardu",
     "name": "Skardu",
     "region": "Gilgit-Baltistan",
-    "tags": ["mountains", "lakes", "desert", "trekking", "adventure", "photography"],
+    "tags": [
+      "mountains",
+      "lakes",
+      "desert",
+      "trekking",
+      "adventure",
+      "photography"
+    ],
     "description": "Gateway to the high Karakoram and K2 — alpine lakes, the vast Deosai plateau, cold deserts, and Balti forts, set on the Indus River.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Shangrila_resort_skardu.jpg/1280px-Shangrila_resort_skardu.jpg",
-    "recommended_trip_days": { "min": 3, "ideal": 6 },
+    "recommended_trip_days": {
+      "min": 3,
+      "ideal": 6
+    },
     "drive_times": {
-      "from_islamabad": { "min_hours": 14, "max_hours": 18, "note": "by road (KKH to Jaglot, then the Skardu road), usually split over 2 days with an overnight in Chilas" },
-      "from_gilgit": { "min_hours": 4, "max_hours": 7, "note": "via the Gilgit-Skardu road (Jaglot junction)" },
+      "from_islamabad": {
+        "min_hours": 14,
+        "max_hours": 18,
+        "note": "by road (KKH to Jaglot, then the Skardu road), usually split over 2 days with an overnight in Chilas"
+      },
+      "from_gilgit": {
+        "min_hours": 4,
+        "max_hours": 7,
+        "note": "via the Gilgit-Skardu road (Jaglot junction)"
+      },
       "nearest_airport": "Skardu International Airport (KDU); ~1 hr flight from Islamabad, but flights are highly weather-dependent and frequently cancelled"
     },
-    "open_months": [4, 5, 6, 7, 8, 9, 10],
+    "open_months": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
     "best_season": {
       "months": "April-October",
       "highlights": "Deosai Plains open roughly Late June to September (wildflowers, golden marmots); clear lakes and pleasant valley weather in summer",
       "avoid": "November to March (heavy snow, the Deosai route closes and the road in can be cut off)"
     },
     "cost_ranges": {
-      "hotel_pkr_per_night": [4000, 15000],
-      "food_pkr_per_day": [1500, 3500],
-      "local_transport_pkr_per_day": [4000, 8000],
+      "hotel_pkr_per_night": [
+        4000,
+        15000
+      ],
+      "food_pkr_per_day": [
+        1500,
+        3500
+      ],
+      "local_transport_pkr_per_day": [
+        4000,
+        8000
+      ],
       "notes": "Jeep hire (4x4) for Deosai/Sheosar adds a notable cost; lakeside resorts like Shangrila sit at the high end"
     },
     "permits": "CNIC sufficient for Pakistani nationals in Skardu town and common spots (Shangrila, Deosai, Khaplu). Foreigners may need an NOC for restricted/high-altitude trekking zones (e.g. Concordia, K2 base camp, near the LoC).",
-    "stays": ["Skardu town (most hotels and services)", "Shangrila / Lower Kachura (lakeside resorts)", "Shigar or Khaplu (forts converted to heritage stays)"],
-    "activities": ["Shangrila / Lower Kachura Lake", "Upper Kachura Lake", "Deosai National Park & Sheosar Lake", "Shigar Fort", "Khaplu Palace", "Katpana Cold Desert (dunes)", "Manthokha Waterfall","Satpara Lake",
-"Sarfaranga Cold Desert",
-"Basho Valley"],
-    "tips": ["Carry cash — ATMs are limited and often out of service", "Don't rely on the Skardu flight; keep road time as a backup", "Hire a 4x4 with a local driver for Deosai — ordinary cars can't do the track", "Acclimatize before any high-altitude trek; Deosai sits above 4,000m","Keep one buffer day in your itinerary because flights are often delayed or cancelled."]
+    "stays": [
+      "Skardu town (most hotels and services)",
+      "Shangrila / Lower Kachura (lakeside resorts)",
+      "Shigar or Khaplu (forts converted to heritage stays)"
+    ],
+    "activities": [
+      "Shangrila / Lower Kachura Lake",
+      "Upper Kachura Lake",
+      "Deosai National Park & Sheosar Lake",
+      "Shigar Fort",
+      "Khaplu Palace",
+      "Katpana Cold Desert (dunes)",
+      "Manthokha Waterfall",
+      "Satpara Lake",
+      "Sarfaranga Cold Desert",
+      "Basho Valley"
+    ],
+    "tips": [
+      "Carry cash — ATMs are limited and often out of service",
+      "Don't rely on the Skardu flight; keep road time as a backup",
+      "Hire a 4x4 with a local driver for Deosai — ordinary cars can't do the track",
+      "Acclimatize before any high-altitude trek; Deosai sits above 4,000m",
+      "Keep one buffer day in your itinerary because flights are often delayed or cancelled."
+    ]
   },
-
   {
     "id": "naran-kaghan",
     "name": "Naran & Kaghan Valley",
     "region": "Khyber Pakhtunkhwa",
-    "tags": ["mountains", "lakes", "scenic", "family", "adventure"],
+    "tags": [
+      "mountains",
+      "lakes",
+      "scenic",
+      "family",
+      "adventure"
+    ],
     "description": "The classic Kaghan Valley summer escape — alpine Lake Saif-ul-Malook, green meadows at Shogran, and the high Babusar Pass; hugely popular with families.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Siri_Paye%2C_Shogran%2C_Kaghan_Valley.jpg/1280px-Siri_Paye%2C_Shogran%2C_Kaghan_Valley.jpg",
-    "recommended_trip_days": { "min": 2, "ideal": 4 },
+    "recommended_trip_days": {
+      "min": 2,
+      "ideal": 4
+    },
     "drive_times": {
-      "from_islamabad": { "min_hours": 6, "max_hours": 9, "note": "via Mansehra and Balakot; mostly paved, slow above Kaghan" },
+      "from_islamabad": {
+        "min_hours": 6,
+        "max_hours": 9,
+        "note": "via Mansehra and Balakot; mostly paved, slow above Kaghan"
+      },
       "nearest_airport": "Islamabad International Airport (ISB), then ~6-8 hr drive"
     },
-    "open_months": [5, 6, 7, 8, 9, 10],
+    "open_months": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
     "best_season": {
       "months": "May to October",
       "highlights": "Lake Saif-ul-Malook and Babusar Pass open mid-summer (roughly July-August); lush green valleys and meadows",
       "avoid": "November to April (heavy snow, Babusar Pass and the upper valley road closed)"
     },
     "cost_ranges": {
-      "hotel_pkr_per_night": [3000, 12000],
-      "food_pkr_per_day": [1200, 3000],
-      "local_transport_pkr_per_day": [3000, 7000],
+      "hotel_pkr_per_night": [
+        3000,
+        12000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        3000,
+        7000
+      ],
       "notes": "Jeep hire to Lake Saif-ul-Malook is a common extra cost; weekends in peak season are pricey"
     },
     "permits": "CNIC sufficient for Pakistani nationals; no special permits. Babusar Pass access is seasonal and weather-dependent.",
-    "stays": ["Naran town (most hotels)", "Shogran (forest resorts)", "Kaghan village", "Batakundi"],
-    "activities": ["Lake Saif-ul-Malook", "Babusar Pass", "Shogran & Siri Paye meadows", "Lulusar Lake", "Ansoo Lake trek","Lalazar Plateau","Kunhar River rafting"],
-    "tips": ["Hire a 4x4 jeep for the rough track up to Lake Saif-ul-Malook", "Carry warm clothing even in July — nights are cold", "Book ahead in July-August peak; weekends get very crowded", "Confirm Babusar Pass is open before planning to cross it","Fuel stations become sparse after Balakot—top up your tank before heading further north."]
+    "stays": [
+      "Naran town (most hotels)",
+      "Shogran (forest resorts)",
+      "Kaghan village",
+      "Batakundi"
+    ],
+    "activities": [
+      "Lake Saif-ul-Malook",
+      "Babusar Pass",
+      "Shogran & Siri Paye meadows",
+      "Lulusar Lake",
+      "Ansoo Lake trek",
+      "Lalazar Plateau",
+      "Kunhar River rafting"
+    ],
+    "tips": [
+      "Hire a 4x4 jeep for the rough track up to Lake Saif-ul-Malook",
+      "Carry warm clothing even in July — nights are cold",
+      "Book ahead in July-August peak; weekends get very crowded",
+      "Confirm Babusar Pass is open before planning to cross it",
+      "Fuel stations become sparse after Balakot—top up your tank before heading further north."
+    ]
   },
-
   {
     "id": "swat-valley",
     "name": "Swat Valley",
     "region": "Khyber Pakhtunkhwa",
-    "tags": ["mountains", "green", "valleys", "family", "culture", "waterfalls", "heritage", "skiing"],
+    "tags": [
+      "mountains",
+      "green",
+      "valleys",
+      "family",
+      "culture",
+      "waterfalls",
+      "heritage",
+      "skiing"
+    ],
     "description": "The 'Switzerland of Pakistan' — green valleys along the Swat River, Buddhist heritage, the upper resort of Kalam, and the ski slopes of Malam Jabba; accessible and family-friendly.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Mahodand_l.jpg/1280px-Mahodand_l.jpg",
-    "recommended_trip_days": { "min": 2, "ideal": 4 },
+    "recommended_trip_days": {
+      "min": 2,
+      "ideal": 4
+    },
     "drive_times": {
-      "from_islamabad": { "min_hours": 5, "max_hours": 7, "note": "via the M-1 motorway to Mardan, then up to Mingora; upper Swat (Kalam) adds 3-4 hrs" },
+      "from_islamabad": {
+        "min_hours": 5,
+        "max_hours": 7,
+        "note": "via the M-1 motorway to Mardan, then up to Mingora; upper Swat (Kalam) adds 3-4 hrs"
+      },
       "nearest_airport": "Saidu Sharif Airport (SDT) near Mingora; limited flights, so most travel by road"
     },
-    "open_months": [3, 4, 5, 6, 7, 8, 9, 10, 11],
+    "open_months": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
     "best_season": {
       "months": "March to November",
       "highlights": "Lush green valleys and the Swat River in spring-summer; Kalam and Mahodand Lake best June-September; Malam Jabba offers winter skiing (Dec-Feb)",
       "avoid": "Deep winter for upper valleys like Kalam (heavy snow, roads can close)"
     },
     "cost_ranges": {
-      "hotel_pkr_per_night": [2500, 12000],
-      "food_pkr_per_day": [1200, 3000],
-      "local_transport_pkr_per_day": [2500, 6000],
+      "hotel_pkr_per_night": [
+        2500,
+        12000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        2500,
+        6000
+      ],
       "notes": "Lower Swat (Mingora) is cheaper; Kalam and upper valleys cost more in peak summer"
     },
     "permits": "CNIC sufficient for Pakistani nationals; no special permits for the main valley.",
-    "stays": ["Mingora / Saidu Sharif (largest base)", "Bahrain", "Kalam (upper valley)", "Malam Jabba (ski resort)"],
-    "activities": ["Malam Jabba skiing & chairlift", "Kalam Valley", "Mahodand Lake", "Swat River", "Butkara Buddhist stupa", "Fizagat riverside park"],
-    "tips": ["Lower Swat is reachable year-round; only upper valleys snow shut in winter", "Roads to Kalam are slow and busy in peak season — start early", "Carry layers for the upper valleys even in summer"]
+    "stays": [
+      "Mingora / Saidu Sharif (largest base)",
+      "Bahrain",
+      "Kalam (upper valley)",
+      "Malam Jabba (ski resort)"
+    ],
+    "activities": [
+      "Malam Jabba skiing & chairlift",
+      "Kalam Valley",
+      "Mahodand Lake",
+      "Swat River",
+      "Butkara Buddhist stupa",
+      "Fizagat riverside park"
+    ],
+    "tips": [
+      "Lower Swat is reachable year-round; only upper valleys snow shut in winter",
+      "Roads to Kalam are slow and busy in peak season — start early",
+      "Carry layers for the upper valleys even in summer"
+    ]
   },
-
   {
     "id": "murree-galiyat",
     "name": "Murree & Galiyat",
     "region": "Punjab / KP (Galiyat)",
-    "tags": ["hills", "chill", "family", "accessible", "viewpoints", "pine-forests"],
+    "tags": [
+      "hills",
+      "chill",
+      "family",
+      "accessible",
+      "viewpoints",
+      "pine-forests"
+    ],
     "description": "The closest hill stations to Islamabad — pine-covered ridges, Mall Road, and the forest trails of the Galiyat; an easy, relaxed family weekend escape rather than a remote adventure.",
     "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Sunset_in_hills_-_Holy_Trinity_Church%2C_Murree.jpg/1280px-Sunset_in_hills_-_Holy_Trinity_Church%2C_Murree.jpg",
-    "recommended_trip_days": { "min": 1, "ideal": 2 },
+    "recommended_trip_days": {
+      "min": 1,
+      "ideal": 2
+    },
     "drive_times": {
-      "from_islamabad": { "min_hours": 1.5, "max_hours": 3, "note": "~1-1.5 hrs to Murree via the Expressway; longer in weekend/holiday traffic" },
+      "from_islamabad": {
+        "min_hours": 1.5,
+        "max_hours": 3,
+        "note": "~1-1.5 hrs to Murree via the Expressway; longer in weekend/holiday traffic"
+      },
       "nearest_airport": "Islamabad International Airport (ISB), ~1.5-2 hr drive"
     },
-    "open_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "open_months": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
     "best_season": {
       "months": "Year-round",
       "highlights": "Cool summer escape (May-September); winter snowfall (December-January) draws big crowds",
       "avoid": "Public holidays and long weekends — severe traffic jams and overcrowding"
     },
     "cost_ranges": {
-      "hotel_pkr_per_night": [3000, 15000],
-      "food_pkr_per_day": [1000, 3000],
-      "local_transport_pkr_per_day": [1500, 4000],
+      "hotel_pkr_per_night": [
+        3000,
+        15000
+      ],
+      "food_pkr_per_day": [
+        1000,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        1500,
+        4000
+      ],
       "notes": "Cheaper midweek; both prices and crowds spike on weekends and holidays"
     },
     "permits": "None — open access, a domestic tourism hub.",
-    "stays": ["Murree Mall Road", "Bhurban", "Nathia Gali (Galiyat)", "Ayubia"],
-    "activities": ["Mall Road Murree", "Patriata (New Murree) chairlift", "Nathia Gali pipeline trail", "Ayubia chairlift", "Mushkpuri & Miranjani day hikes"],
-    "tips": ["Avoid peak weekends and snow-season holidays — traffic can gridlock for hours", "Book hotels ahead in winter snowfall season", "It's a relaxed family destination, not a trekking adventure"]
+    "stays": [
+      "Murree Mall Road",
+      "Bhurban",
+      "Nathia Gali (Galiyat)",
+      "Ayubia"
+    ],
+    "activities": [
+      "Mall Road Murree",
+      "Patriata (New Murree) chairlift",
+      "Nathia Gali pipeline trail",
+      "Ayubia chairlift",
+      "Mushkpuri & Miranjani day hikes"
+    ],
+    "tips": [
+      "Avoid peak weekends and snow-season holidays — traffic can gridlock for hours",
+      "Book hotels ahead in winter snowfall season",
+      "It's a relaxed family destination, not a trekking adventure"
+    ]
+  },
+  {
+    "id": "fairy-meadows",
+    "name": "Fairy Meadows",
+    "region": "Gilgit-Baltistan",
+    "tags": [
+      "mountains",
+      "trekking",
+      "camping",
+      "scenic",
+      "adventure"
+    ],
+    "description": "A high alpine meadow facing the sheer face of Nanga Parbat, reached by a thrilling jeep ride and an hour's hike — famous for camping under the world's 9th-highest peak.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Nanga_Parbat_The_Killer_Mountain.jpg/1280px-Nanga_Parbat_The_Killer_Mountain.jpg",
+    "recommended_trip_days": {
+      "min": 2,
+      "ideal": 3
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 12,
+        "max_hours": 16,
+        "note": "by road to Raikot Bridge on the KKH, then a 4x4 jeep track and a 1-hour uphill hike"
+      },
+      "nearest_airport": "Gilgit Airport (GIL), then ~2.5 hr drive to Raikot Bridge"
+    },
+    "open_months": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "best_season": {
+      "months": "May to October",
+      "highlights": "Clear Nanga Parbat views and green meadows in summer; golden larches in October",
+      "avoid": "November to April (heavy snow; jeep track and camps closed)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        4000,
+        12000
+      ],
+      "food_pkr_per_day": [
+        1500,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        4000,
+        9000
+      ],
+      "notes": "The Raikot-to-Fairy-Meadows jeep ride is a fixed-rate adventure; cottages are basic wooden huts"
+    },
+    "permits": "CNIC sufficient for Pakistani nationals; no special permit. The jeep track is privately operated.",
+    "stays": [
+      "Fairy Meadows cottages",
+      "Raikot Serai",
+      "tented camps"
+    ],
+    "activities": [
+      "Nanga Parbat viewpoint",
+      "Beyal Camp hike",
+      "Nanga Parbat base camp trek",
+      "stargazing & camping"
+    ],
+    "tips": [
+      "The jeep track is steep and exposed — not for the faint-hearted",
+      "Carry warm layers; nights are cold even in summer",
+      "Facilities are basic — bring your own essentials",
+      "The final stretch is on foot or by horse only"
+    ]
+  },
+  {
+    "id": "neelum-valley",
+    "name": "Neelum Valley",
+    "region": "Azad Kashmir",
+    "tags": [
+      "mountains",
+      "river",
+      "waterfalls",
+      "green",
+      "scenic"
+    ],
+    "description": "A long, lush river valley in Azad Kashmir along the Line of Control — forested mountains, waterfalls and villages like Keran, Sharda and Arang Kel.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Neelum_Valley%2C_Azad_Jammu_%26_Kashmir%2C_Pakistan.jpg/1280px-Neelum_Valley%2C_Azad_Jammu_%26_Kashmir%2C_Pakistan.jpg",
+    "recommended_trip_days": {
+      "min": 3,
+      "ideal": 5
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 6,
+        "max_hours": 9,
+        "note": "via Muzaffarabad, then up the Neelum road; army check posts en route"
+      },
+      "nearest_airport": "Islamabad International Airport (ISB), then ~6-8 hr drive"
+    },
+    "open_months": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "best_season": {
+      "months": "May to October",
+      "highlights": "Lush green valley and waterfalls in summer; Arang Kel and Sharda at their best June-September",
+      "avoid": "November to April (snow blocks the upper valley)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        3000,
+        9000
+      ],
+      "food_pkr_per_day": [
+        1000,
+        2500
+      ],
+      "local_transport_pkr_per_day": [
+        3000,
+        7000
+      ],
+      "notes": "Jeep needed for upper villages; Arang Kel reached by chairlift plus a hike"
+    },
+    "permits": "CNIC required; army check posts along the route due to the nearby LoC. Foreign tourists need a No Objection Certificate (NOC).",
+    "stays": [
+      "Keran",
+      "Sharda",
+      "Arang Kel",
+      "Kel"
+    ],
+    "activities": [
+      "Arang Kel",
+      "Sharda ruins & ancient university",
+      "Kutton / Jagran waterfall",
+      "Ratti Gali Lake trek",
+      "riverside walks"
+    ],
+    "tips": [
+      "Carry your CNIC; expect security check posts",
+      "Connectivity is limited — local AJK SIMs work best",
+      "Book Arang Kel stays ahead in peak summer",
+      "Roads are narrow and winding — travel in daylight"
+    ]
+  },
+  {
+    "id": "gilgit",
+    "name": "Gilgit",
+    "region": "Gilgit-Baltistan",
+    "tags": [
+      "city",
+      "gateway",
+      "culture",
+      "mountains",
+      "hub"
+    ],
+    "description": "The bustling capital of Gilgit-Baltistan and the gateway hub to Hunza, Skardu and the Karakoram — markets, river views and ancient Buddhist relics nearby.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Gilgit_City_a_View_from_Gilgit_serena_hotel.jpg/1280px-Gilgit_City_a_View_from_Gilgit_serena_hotel.jpg",
+    "recommended_trip_days": {
+      "min": 1,
+      "ideal": 2
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 14,
+        "max_hours": 18,
+        "note": "by road on the KKH, usually split over 2 days via Chilas"
+      },
+      "nearest_airport": "Gilgit Airport (GIL); ~1 hr flight from Islamabad, weather-dependent"
+    },
+    "open_months": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "best_season": {
+      "months": "March to November",
+      "highlights": "Pleasant spring and autumn; a convenient base before heading to Hunza or Skardu",
+      "avoid": "Deep winter (December-February) — cold, and KKH sections can close"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        3000,
+        12000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        2000,
+        5000
+      ],
+      "notes": "A practical overnight stop with a good range of hotels"
+    },
+    "permits": "CNIC sufficient; no special permit for Gilgit city.",
+    "stays": [
+      "Gilgit city centre",
+      "Jutial",
+      "Gilgit Serena"
+    ],
+    "activities": [
+      "Kargah Buddha rock carving",
+      "Gilgit bazaar",
+      "Gilgit River viewpoints",
+      "Chinar Bagh"
+    ],
+    "tips": [
+      "A handy base and supply stop before remote areas",
+      "Carry cash; ATMs work but can be unreliable",
+      "Confirm onward road or flight conditions here"
+    ]
+  },
+  {
+    "id": "chitral",
+    "name": "Chitral",
+    "region": "Khyber Pakhtunkhwa",
+    "tags": [
+      "mountains",
+      "culture",
+      "valleys",
+      "remote",
+      "heritage"
+    ],
+    "description": "A remote mountain district below Tirich Mir, Pakistan's highest peak outside the Karakoram — old bazaars, Chitral Fort, and the gateway to the Kalash valleys.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Chitral_montage.jpg/1280px-Chitral_montage.jpg",
+    "recommended_trip_days": {
+      "min": 2,
+      "ideal": 4
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 12,
+        "max_hours": 16,
+        "note": "via Dir and the Lowari Tunnel; a long mountain road"
+      },
+      "nearest_airport": "Chitral Airport (CJL); short flight from Islamabad/Peshawar, weather-dependent"
+    },
+    "open_months": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "best_season": {
+      "months": "April to November",
+      "highlights": "Pleasant valleys, Kalash spring/autumn festivals, and clear Tirich Mir views in summer",
+      "avoid": "Deep winter (heavy snow on the approach roads and passes)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        3000,
+        11000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        3000,
+        7000
+      ],
+      "notes": "The Lowari Tunnel has made road access more reliable year-round"
+    },
+    "permits": "CNIC sufficient for Pakistani nationals. Foreigners may need to register; some border zones are restricted.",
+    "stays": [
+      "Chitral town",
+      "Hindukush Heights",
+      "Chitral Fort area"
+    ],
+    "activities": [
+      "Chitral Fort",
+      "Shahi Mosque",
+      "Tirich Mir viewpoints",
+      "Garam Chashma hot springs",
+      "gateway to the Kalash valleys"
+    ],
+    "tips": [
+      "The Lowari Tunnel bypasses the old pass — access is much easier now",
+      "Allow a full day for the drive from Islamabad",
+      "Respect local customs, especially near Kalash areas"
+    ]
+  },
+  {
+    "id": "kalash-valleys",
+    "name": "Kalash Valleys",
+    "region": "Khyber Pakhtunkhwa",
+    "tags": [
+      "culture",
+      "heritage",
+      "valleys",
+      "unique",
+      "festivals"
+    ],
+    "description": "Three small valleys (Bumburet, Rumbur, Birir) near Chitral, home to the ancient Kalash people — a unique pre-Islamic culture with colourful festivals, wooden homes and terraced fields.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Kalash_of_Birir_Valley_%28Coniferous_Forest%29%3B_Tahsin_Shah_01.jpg/1280px-Kalash_of_Birir_Valley_%28Coniferous_Forest%29%3B_Tahsin_Shah_01.jpg",
+    "recommended_trip_days": {
+      "min": 2,
+      "ideal": 3
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 14,
+        "max_hours": 18,
+        "note": "via Chitral, then a rough jeep road into the valleys"
+      },
+      "nearest_airport": "Chitral Airport (CJL), then ~1.5-2 hr by jeep"
+    },
+    "open_months": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "best_season": {
+      "months": "April to October",
+      "highlights": "The Chilam Joshi (May) and Uchal (August) festivals; green valleys in summer",
+      "avoid": "Winter (snow and harder access)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        3000,
+        9000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        2800
+      ],
+      "local_transport_pkr_per_day": [
+        3000,
+        7000
+      ],
+      "notes": "Guesthouses in Bumburet; jeep hire from Chitral"
+    },
+    "permits": "CNIC for Pakistani nationals. Foreign tourists pay a small entry fee / register to enter the Kalash valleys.",
+    "stays": [
+      "Bumburet",
+      "Rumbur",
+      "Birir"
+    ],
+    "activities": [
+      "Kalash villages & living culture",
+      "Kalasha Dur museum",
+      "Chilam Joshi festival (May)",
+      "terraced field walks"
+    ],
+    "tips": [
+      "Always ask before photographing people",
+      "Respect Kalash customs and sacred areas",
+      "Time your visit with a festival for the full experience",
+      "The jeep road in is rough"
+    ]
+  },
+  {
+    "id": "khaplu",
+    "name": "Khaplu",
+    "region": "Gilgit-Baltistan",
+    "tags": [
+      "heritage",
+      "mountains",
+      "river",
+      "culture",
+      "scenic"
+    ],
+    "description": "A serene Balti town east of Skardu on the Shyok River, crowned by the restored Khaplu Palace — gateway to the Hushe valley and Masherbrum treks.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/View_of_main_entrance_of_Khaplu_Palace.jpg/1280px-View_of_main_entrance_of_Khaplu_Palace.jpg",
+    "recommended_trip_days": {
+      "min": 1,
+      "ideal": 2
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 16,
+        "max_hours": 20,
+        "note": "via Skardu, then ~3 hr along the Shyok River"
+      },
+      "nearest_airport": "Skardu International Airport (KDU), then ~3 hr drive"
+    },
+    "open_months": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "best_season": {
+      "months": "April to October",
+      "highlights": "Apricot blossom in spring; clear river valley and Masherbrum views in summer",
+      "avoid": "November to March (cold and snow)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        4000,
+        16000
+      ],
+      "food_pkr_per_day": [
+        1500,
+        3000
+      ],
+      "local_transport_pkr_per_day": [
+        4000,
+        8000
+      ],
+      "notes": "The Serena Khaplu Palace is the heritage high-end stay"
+    },
+    "permits": "CNIC sufficient for the town; an NOC may be needed for high treks toward the Karakoram.",
+    "stays": [
+      "Khaplu town",
+      "Khaplu Palace (Serena)",
+      "Hushe valley"
+    ],
+    "activities": [
+      "Khaplu Palace",
+      "Chaqchan Mosque",
+      "Shyok River valley",
+      "Hushe valley & Masherbrum base",
+      "Thalay & Saling valleys"
+    ],
+    "tips": [
+      "Combine with a Skardu trip — it's a scenic extension",
+      "The heritage palace hotel is worth a visit even just for tea",
+      "Carry warm clothing for cool river-valley evenings"
+    ]
+  },
+  {
+    "id": "astore-valley",
+    "name": "Astore Valley",
+    "region": "Gilgit-Baltistan",
+    "tags": [
+      "mountains",
+      "lakes",
+      "trekking",
+      "scenic",
+      "adventure"
+    ],
+    "description": "A valley on the eastern side of Nanga Parbat famous for Rama Lake and Meadows and the high approach to the Deosai plains — alpine forests, peaks and pristine lakes.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Astore_Rama_Valley.jpg/1280px-Astore_Rama_Valley.jpg",
+    "recommended_trip_days": {
+      "min": 2,
+      "ideal": 3
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 14,
+        "max_hours": 18,
+        "note": "via the KKH to Jaglot, then up the Astore road"
+      },
+      "nearest_airport": "Gilgit Airport (GIL), then ~4-5 hr drive"
+    },
+    "open_months": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "best_season": {
+      "months": "June to October",
+      "highlights": "Rama Lake and Meadows in summer; the Deosai plains accessible from here July-September",
+      "avoid": "November to May (snow blocks the upper valley and Deosai)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        3000,
+        10000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        2800
+      ],
+      "local_transport_pkr_per_day": [
+        4000,
+        9000
+      ],
+      "notes": "Jeep needed for Rama; basic stays in Astore and Rama"
+    },
+    "permits": "CNIC sufficient; no special permit. Deosai is a national park with small entry/jeep arrangements.",
+    "stays": [
+      "Astore town",
+      "Rama",
+      "Tarishing"
+    ],
+    "activities": [
+      "Rama Lake & Meadows",
+      "Nanga Parbat (Rupal face) viewpoints",
+      "Deosai National Park",
+      "Tarishing & Rupal valley"
+    ],
+    "tips": [
+      "Hire a 4x4 for Rama and the Deosai approach",
+      "Carry warm gear — it's high and cold",
+      "Approach Deosai/Skardu from the east via here"
+    ]
+  },
+  {
+    "id": "kumrat-valley",
+    "name": "Kumrat Valley",
+    "region": "Khyber Pakhtunkhwa",
+    "tags": [
+      "forests",
+      "river",
+      "camping",
+      "green",
+      "scenic"
+    ],
+    "description": "A forested valley in Upper Dir with towering deodar pines, the Panjkora River and waterfalls — a popular camping and nature escape.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Evening_shades.jpg/1280px-Evening_shades.jpg",
+    "recommended_trip_days": {
+      "min": 2,
+      "ideal": 3
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 8,
+        "max_hours": 11,
+        "note": "via Timergara and Thal, then a rough jeep track to Kumrat"
+      },
+      "nearest_airport": "Islamabad International Airport (ISB), then ~8-10 hr drive"
+    },
+    "open_months": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "best_season": {
+      "months": "May to October",
+      "highlights": "Lush pine forests and the Panjkora River in summer; waterfalls and high meadows",
+      "avoid": "November to April (snow; the jeep track closes)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        3000,
+        9000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        2800
+      ],
+      "local_transport_pkr_per_day": [
+        4000,
+        9000
+      ],
+      "notes": "Mostly tented camps and basic huts; a 4x4 is needed for the last stretch"
+    },
+    "permits": "CNIC sufficient for Pakistani nationals; no special permit.",
+    "stays": [
+      "Thal",
+      "Kumrat tented camps",
+      "Jahaz Banda (hike-in)"
+    ],
+    "activities": [
+      "Kumrat waterfall",
+      "Panjkora River & deodar forests",
+      "Jahaz Banda meadow hike",
+      "Katora Lake trek",
+      "camping"
+    ],
+    "tips": [
+      "The final jeep track is rough — 4x4 only",
+      "Bring camping essentials; facilities are basic",
+      "Carry warm layers for cold nights"
+    ]
+  },
+  {
+    "id": "phander-valley",
+    "name": "Phander Valley",
+    "region": "Gilgit-Baltistan",
+    "tags": [
+      "lakes",
+      "river",
+      "scenic",
+      "fishing",
+      "mountains"
+    ],
+    "description": "A tranquil valley in Ghizer west of Gilgit, known for the turquoise Phander Lake and Hundrap River, golden poplars in autumn, and trout fishing on the road to Shandur.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Vainakhish_Phandar.jpg/1280px-Vainakhish_Phandar.jpg",
+    "recommended_trip_days": {
+      "min": 1,
+      "ideal": 2
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 17,
+        "max_hours": 22,
+        "note": "via Gilgit, then ~5-6 hr west along the Ghizer / Gupis road"
+      },
+      "nearest_airport": "Gilgit Airport (GIL), then ~5-6 hr drive"
+    },
+    "open_months": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "best_season": {
+      "months": "May to October",
+      "highlights": "Turquoise Phander Lake and green valley in summer; spectacular golden poplars in October",
+      "avoid": "November to April (snow and a long, cold road)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        3000,
+        9000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        2800
+      ],
+      "local_transport_pkr_per_day": [
+        4000,
+        8000
+      ],
+      "notes": "PTDC and local guesthouses; remote, so carry cash"
+    },
+    "permits": "CNIC sufficient; no special permit.",
+    "stays": [
+      "Phander",
+      "Gupis",
+      "Khalti Lake area"
+    ],
+    "activities": [
+      "Phander Lake",
+      "Hundrap River & trout fishing",
+      "Khalti Lake",
+      "drive toward Shandur Pass"
+    ],
+    "tips": [
+      "Remote — fuel up and carry cash before leaving Gilgit",
+      "Autumn (October) is stunning for the poplars",
+      "Combine with a Shandur Pass trip"
+    ]
+  },
+  {
+    "id": "shandur-pass",
+    "name": "Shandur Pass",
+    "region": "Gilgit-Baltistan / KP",
+    "tags": [
+      "mountains",
+      "pass",
+      "polo",
+      "remote",
+      "scenic"
+    ],
+    "description": "The 'Roof of the World' polo ground at ~3,700m between Chitral and Ghizer — vast high plateaus, lakes, and the famous summer Shandur Polo Festival.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Shandur_Top_%26_Shandur_Lake.jpg/1280px-Shandur_Top_%26_Shandur_Lake.jpg",
+    "recommended_trip_days": {
+      "min": 1,
+      "ideal": 2
+    },
+    "drive_times": {
+      "from_islamabad": {
+        "min_hours": 18,
+        "max_hours": 24,
+        "note": "via Gilgit and Ghizer/Phander, or from the Chitral side; long remote jeep roads"
+      },
+      "nearest_airport": "Gilgit Airport (GIL), then a long drive via Ghizer"
+    },
+    "open_months": [
+      6,
+      7,
+      8,
+      9
+    ],
+    "best_season": {
+      "months": "June to September",
+      "highlights": "The Shandur Polo Festival in July; open plateaus and lakes in midsummer",
+      "avoid": "October to May (heavy snow closes the pass)"
+    },
+    "cost_ranges": {
+      "hotel_pkr_per_night": [
+        2500,
+        7000
+      ],
+      "food_pkr_per_day": [
+        1200,
+        2500
+      ],
+      "local_transport_pkr_per_day": [
+        5000,
+        12000
+      ],
+      "notes": "Camping at the pass during the festival; nearest stays in Phander or Mastuj. A jeep is essential."
+    },
+    "permits": "CNIC sufficient; no special permit. The pass is a seasonal high-altitude route.",
+    "stays": [
+      "Phander (east approach)",
+      "Mastuj (west approach)",
+      "festival camping"
+    ],
+    "activities": [
+      "Shandur Polo Festival (July)",
+      "Shandur Lake",
+      "high plateau drives",
+      "Mastuj & Laspur valleys"
+    ],
+    "tips": [
+      "Only accessible in high summer — snow-bound otherwise",
+      "Acclimatize; the pass sits at ~3,700m",
+      "Camping gear is needed during the festival",
+      "A 4x4 and an experienced driver are essential"
+    ]
   }
 ]
