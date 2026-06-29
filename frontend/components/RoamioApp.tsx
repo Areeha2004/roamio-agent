@@ -1399,6 +1399,18 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
             />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(26,31,22,0.9) 0%, rgba(26,31,22,0.25) 45%, transparent 72%)" }} />
+            {/* Quick-glance glass chips overlaid on the hero */}
+            <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
+              {[
+                { icon: Calendar, text: `${trip.days} days` },
+                { icon: MapPin, text: `From ${trip.startCity}` },
+              ].map(({ icon: Icon, text }) => (
+                <span key={text} className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 text-white"
+                      style={{ background: "rgba(255,255,255,0.16)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
+                  <Icon size={11} /> {text}
+                </span>
+              ))}
+            </div>
             <div className="absolute bottom-0 left-0 right-0 p-5 md:p-7">
               <span className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.7)" }}>Your Itinerary</span>
               <h1 className="text-2xl md:text-4xl font-bold text-white mt-1 mb-2.5" style={{ fontFamily: "Sora, sans-serif" }}>
@@ -1469,41 +1481,47 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
 
         {/* Cost Summary */}
         <div
-          className="rounded-2xl p-6 mb-4"
+          className="rounded-2xl p-5 sm:p-6 mb-4"
           style={{ background: P.blackForest }}
         >
-          <div className="flex items-center gap-2 mb-4">
-            <Wallet size={15} style={{ color: P.aquamarine }} />
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: `${P.aquamarine}90` }}>
-              Cost Breakdown
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Wallet size={15} style={{ color: P.aquamarine }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: `${P.aquamarine}90` }}>
+                Cost Breakdown
+              </span>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+              {trip.stayStyle} stay
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-2 gap-4 mb-5">
             <div>
-              <div className="text-3xl font-bold text-white mb-0.5" style={{ fontFamily: "DM Mono, monospace" }}>
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5" style={{ fontFamily: "DM Mono, monospace" }}>
                 {formatPKR(trip.totalCost)}
               </div>
               <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>Total estimate</div>
             </div>
             <div>
-              <div className="text-3xl font-bold mb-0.5" style={{ fontFamily: "DM Mono, monospace", color: P.aquamarine }}>
+              <div className="text-2xl sm:text-3xl font-bold mb-0.5" style={{ fontFamily: "DM Mono, monospace", color: P.aquamarine }}>
                 {formatPKR(trip.perDayCost)}
               </div>
               <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>Per day average</div>
             </div>
           </div>
+          {/* 2x2 on mobile, 4-up on larger screens — keeps the PKR figures from cramping */}
           <div
-            className="grid grid-cols-4 gap-3 pt-4"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4"
             style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
           >
             {[
               { label: "Hotels", value: trip.accommodation, icon: Tent },
               { label: "Food", value: trip.food, icon: Coffee },
               { label: "Local", value: trip.localTransport, icon: Navigation },
-              { label: "Travel", value: trip.travel, icon: Fuel },
+              { label: "Transport", value: trip.travel, icon: Fuel },
             ].map(({ label, value, icon: Icon }) => (
-              <div key={label} className="text-center">
-                <Icon size={13} className="mx-auto mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }} />
+              <div key={label} className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.04)" }}>
+                <Icon size={13} className="mb-1.5" style={{ color: `${P.aquamarine}99` }} />
                 <div className="text-sm font-bold text-white" style={{ fontFamily: "DM Mono, monospace" }}>
                   {formatPKR(value)}
                 </div>
@@ -1537,11 +1555,21 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                 Route · ~{trip.routeSummary.oneWayHours}h one way
               </span>
             </div>
-            <div className="space-y-1.5">
+            <div>
               {trip.routeSummary.legs.map((l, i) => (
-                <div key={i} className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                  <span className="font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>{l.from} → {l.to}</span>
-                  <span className="text-xs text-muted-foreground">~{l.hours}h{l.via ? ` · ${l.via}` : ""}</span>
+                <div key={i} className="flex gap-3">
+                  <div className="flex flex-col items-center pt-1.5">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: P.fern }} />
+                    {i < trip.routeSummary.legs.length - 1 && (
+                      <div className="w-px flex-1 my-1" style={{ background: `${P.fern}40` }} />
+                    )}
+                  </div>
+                  <div className="pb-3 flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>
+                      {l.from} <span style={{ color: P.fern }}>→</span> {l.to}
+                    </div>
+                    <div className="text-xs text-muted-foreground">~{l.hours}h{l.via ? ` · ${l.via}` : ""}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1629,7 +1657,7 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
             <AlertTriangle size={17} style={{ color: "#c47d00", flexShrink: 0, marginTop: 2 }} />
             <div>
               <p className="text-sm font-semibold mb-0.5" style={{ color: "#7a4e00" }}>
-                Permit Required — NOC for Gilgit-Baltistan
+                Permits &amp; entry
               </p>
               <p className="text-xs leading-relaxed" style={{ color: "#9a6200" }}>{trip.permitNote}</p>
             </div>
