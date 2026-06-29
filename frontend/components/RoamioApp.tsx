@@ -1473,19 +1473,6 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
           </div>
         </div>
 
-        {/* Photo galleries */}
-        {trip.destinationNames.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-5">
-            <span className="text-xs text-muted-foreground flex items-center gap-1"><Camera size={12} /> Galleries:</span>
-            {trip.destinationNames.map((name) => (
-              <a key={"g-" + name} target="_blank" rel="noopener noreferrer"
-                 href={`https://unsplash.com/s/photos/${encodeURIComponent(photoQuery(name))}`}
-                 className="text-xs font-semibold px-2.5 py-1 rounded-full border border-border hover:border-primary/50 transition-colors text-foreground">
-                {name}
-              </a>
-            ))}
-          </div>
-        )}
 
         {/* Cost Summary */}
         <div
