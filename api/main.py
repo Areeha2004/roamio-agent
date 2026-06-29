@@ -82,7 +82,8 @@ def _to_request(req: PlanRequest) -> dict:
 
 @app.post("/generate-itinerary")
 def generate(req: PlanRequest):
-    """Non-streaming: returns the full itinerary in one response."""
+    """Non-streaming: returns the full itinerary in one response.
+    Nothing is persisted here — a trip is only saved when the user shares it (POST /share)."""
     request = _to_request(req)
     try:
         result = generate_itinerary(request)
@@ -90,9 +91,6 @@ def generate(req: PlanRequest):
         raise HTTPException(status_code=500, detail=f"itinerary generation failed: {e}")
     if isinstance(result, dict) and "error" in result:
         raise HTTPException(status_code=400, detail=result)  # e.g. unsupported start city
-    share_id = save_trip(request, result)
-    if share_id:
-        result["meta"]["share_id"] = share_id
     return result
 
 
@@ -122,9 +120,7 @@ def generate_stream(req: PlanRequest):
                     if isinstance(update, dict) and update.get("itinerary") is not None:
                         itinerary = update["itinerary"]
             if itinerary and "error" not in itinerary:
-                share_id = save_trip(request, itinerary)
-                if share_id:
-                    itinerary["meta"]["share_id"] = share_id
+                # Not persisted on generation — only when the user shares it (POST /share).
                 yield json.dumps({"type": "result", "itinerary": itinerary}) + "\n"
             else:
                 yield json.dumps({"type": "error", "detail": itinerary or "no itinerary produced"}) + "\n"
@@ -136,6 +132,21 @@ def generate_stream(req: PlanRequest):
         media_type="application/x-ndjson",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.post("/share")
+def share_trip(itinerary: dict):
+    """Persist a trip ON DEMAND (when the user hits Share / Copy link) and return its
+    share id. Saving only here — not on generation — keeps the DB free of trips nobody
+    chose to keep. Returns 503 if sharing isn't configured (no Supabase)."""
+    if not isinstance(itinerary, dict) or "summary" not in itinerary:
+        raise HTTPException(status_code=400, detail="invalid itinerary payload")
+    if itinerary.get("meta", {}).get("share_id"):
+        return {"share_id": itinerary["meta"]["share_id"]}  # already shared — reuse the id
+    share_id = save_trip(itinerary.get("request", {}), itinerary)
+    if not share_id:
+        raise HTTPException(status_code=503, detail="sharing is not available right now")
+    return {"share_id": share_id}
 
 
 @app.get("/trip/{share_id}")

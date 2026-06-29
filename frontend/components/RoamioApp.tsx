@@ -277,6 +277,17 @@ const cn = (...classes: (string | boolean | undefined)[]) =>
 
 const formatPKR = (n: number) => "PKR " + n.toLocaleString("en-PK");
 
+// Turn a formal destination name into a short, common photo-search query:
+// "Naran & Kaghan Valley" → "naran kaghan", "Murree & Galiyat" → "murree".
+// Drops the "&", generic words (valley/galiyat/region), and any "pakistan" suffix.
+const photoQuery = (name: string) =>
+  name
+    .replace(/&/g, " ")
+    .replace(/\b(valley|valleys|galiyat|region|pakistan)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 function Navbar({
   onLogoClick,
@@ -1148,16 +1159,23 @@ function LoadingPage({ status }: { status?: string }) {
 }
 
 // ─── Itinerary Page ───────────────────────────────────────────────────────────
-export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: (tweak: string) => void; onNewTrip: () => void }) {
+export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: (tweak: string) => void; onShare?: () => Promise<string | null>; onNewTrip: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [tweakInput, setTweakInput] = useState("");
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   // `trip` arrives as a prop — live API data, or SAMPLE_TRIP before a search runs.
 
-  const handleCopy = () => {
-    const url = trip.shareId
-      ? `${window.location.origin}/trip/${trip.shareId}`
-      : window.location.href;
+  // Save-on-share: the trip is only written to the DB the first time the user copies
+  // its link (via onShare). Subsequent clicks reuse the id already on `trip`.
+  const handleCopy = async () => {
+    let id = trip.shareId;
+    if (!id && onShare) {
+      setSharing(true);
+      id = (await onShare()) || "";
+      setSharing(false);
+    }
+    const url = id ? `${window.location.origin}/trip/${id}` : window.location.href;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -1184,7 +1202,7 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
               </h1>
               {trip.destinationNames[0] && (
                 <a
-                  href={`https://unsplash.com/s/photos/${encodeURIComponent(trip.destinationNames[0] + " pakistan")}`}
+                  href={`https://unsplash.com/s/photos/${encodeURIComponent(photoQuery(trip.destinationNames[0]))}`}
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-semibold"
                   style={{ color: "rgba(255,255,255,0.92)" }}
@@ -1232,7 +1250,7 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
             <span className="text-xs text-muted-foreground flex items-center gap-1"><Camera size={12} /> Galleries:</span>
             {trip.destinationNames.map((name) => (
               <a key={"g-" + name} target="_blank" rel="noopener noreferrer"
-                 href={`https://unsplash.com/s/photos/${encodeURIComponent(name + " pakistan")}`}
+                 href={`https://unsplash.com/s/photos/${encodeURIComponent(photoQuery(name))}`}
                  className="text-xs font-semibold px-2.5 py-1 rounded-full border border-border hover:border-primary/50 transition-colors text-foreground">
                 {name}
               </a>
@@ -1543,7 +1561,8 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
         <div className="space-y-4">
           <button
             onClick={handleCopy}
-            className="w-full flex items-center justify-center gap-3 font-semibold text-sm py-4 rounded-2xl border-2 transition-all duration-200"
+            disabled={sharing}
+            className="w-full flex items-center justify-center gap-3 font-semibold text-sm py-4 rounded-2xl border-2 transition-all duration-200 disabled:opacity-70"
             style={{
               borderColor: copied ? "#34a870" : "var(--border)",
               background: copied ? "#f0fdf6" : "var(--card)",
@@ -1551,7 +1570,11 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
               fontFamily: "Sora, sans-serif",
             }}
           >
-            {copied ? <><Check size={17} style={{ color: "#16a34a" }} /> Link copied!</> : <><Share2 size={17} /> Copy Share Link</>}
+            {sharing
+              ? <><Share2 size={17} /> Creating link…</>
+              : copied
+                ? <><Check size={17} style={{ color: "#16a34a" }} /> Link copied!</>
+                : <><Share2 size={17} /> Copy Share Link</>}
           </button>
 
           <div className="bg-card border border-border rounded-2xl p-5">
@@ -1654,6 +1677,7 @@ function ErrorPage({ onRetry }: { onRetry: () => void }) {
 export default function App() {
   const [page, setPage] = useState<Page>("landing");
   const [trip, setTrip] = useState<typeof SAMPLE_TRIP>(SAMPLE_TRIP);
+  const [rawTrip, setRawTrip] = useState<any>(null);   // backend itinerary JSON, saved only on share
   const [lastForm, setLastForm] = useState<PlanForm | null>(null);
   const [status, setStatus] = useState("");
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1698,6 +1722,7 @@ export default function App() {
       }
       if (!result) throw new Error("no itinerary");
       setTrip(adaptItinerary(result));
+      setRawTrip(result);          // kept in memory; persisted to the DB only if the user shares
       setLastForm(form);
       setPage("itinerary");
     } catch {
@@ -1732,6 +1757,27 @@ export default function App() {
     runPlan(form);
   };
 
+  // Persist the trip on demand (only when the user shares / copies the link) and
+  // return its share id. The id is cached on `trip` so a second click won't re-save.
+  const handleShare = async (): Promise<string | null> => {
+    if (trip.shareId) return trip.shareId;
+    if (!rawTrip) return null;
+    try {
+      const res = await fetch(`${API_URL}/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(rawTrip),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const id: string | null = data.share_id || null;
+      if (id) setTrip(t => ({ ...t, shareId: id }));
+      return id;
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
     return () => { if (loadingTimer.current) clearTimeout(loadingTimer.current); };
   }, []);
@@ -1748,7 +1794,7 @@ export default function App() {
       {page === "landing"    && <LandingPage onPlanClick={() => setPage("planner")} />}
       {page === "planner"    && <PlannerPage onSubmit={handlePlanSubmit} />}
       {page === "loading"    && <LoadingPage status={status} />}
-      {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={handleTweak} onNewTrip={() => setPage("planner")} />}
+      {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={handleTweak} onShare={handleShare} onNewTrip={() => setPage("planner")} />}
       {page === "error"      && <ErrorPage onRetry={() => setPage("planner")} />}
     </div>
   );
