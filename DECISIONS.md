@@ -294,3 +294,33 @@ affiliate-revenue path later. Stays true to the "suggests, does not book" moat.
 
 **Takeaway.** "Useful" doesn't require "integrated." A well-targeted external link often
 delivers most of the value of an integration at none of the fragility.
+
+---
+
+## 012 · Stay northern + RAG-ground the writer in real sources
+**Date:** 2026-06-29 (post-v0) · **Area:** Scope / RAG / content quality
+
+**Challenge.** Two linked questions. (1) Adding Lahore exposed that the single
+**Islamabad-hub** router can't model non-northern trips — Gujrat→Lahore shouldn't route
+via Islamabad. A multi-hub tree would fix it but is real complexity for ~one city. (2)
+The writer's "AI" was thin: it got only activity *names* from the corpus and improvised
+generic prose, with no real grounding, sources, or faithfulness.
+
+**Decision.** Keep Roamio **northern-only** (drop Lahore, keep the hub model — it's correct
+for the northern corridor) and spend the effort where the AI engineering is: a **second
+RAG pipeline that grounds the writer**. `corpus/ingest_content.py` pulls real travel text
+per destination (Wikivoyage guides + Wikipedia + a Tavily top-up) and caches it;
+`rag/content.py` chunks/embeds it into a separate `destination_content` Chroma collection;
+the writer retrieves per-stop snippets, grounds each day's notes in them, and emits a
+**citation table** (`sources`) the UI renders as "Grounded in real sources."
+
+**Why.** Pakistan tourism *is* the north, so the hub model is right and non-northern is low
+payoff. Grounding the prose in cited real content is the higher-value, more interesting
+work — it fixes authenticity (the day notes now carry real specifics, not plausible
+filler) and keeps the "code decides, the LLM only writes — now from sources it must cite"
+principle. Authoritative sources (Wikivoyage/Wikipedia) are blended in so web listicles
+don't dominate the citations.
+
+**Takeaway.** When a feature forces a disproportionate architecture change for thin payoff,
+the right move can be to *narrow scope* and reinvest the effort in the part that actually
+makes the product better — here, turning a templated writer into a grounded, cited one.
