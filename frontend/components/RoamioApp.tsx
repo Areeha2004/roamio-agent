@@ -1541,7 +1541,7 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
 
         {/* Slightly-over-budget notice — we kept the on-theme picks instead of swapping */}
         {trip.budgetStatus === "slightly_over" && (
-          <div className="rounded-2xl p-4 mb-3 flex items-start gap-3" style={{ background: "#fff7ed", border: "1px solid #fdba74" }}>
+          <div className="rounded-2xl p-4 mb-4 flex items-start gap-3" style={{ background: "#fff7ed", border: "1px solid #fdba74" }}>
             <Wallet size={17} style={{ color: "#c2620c", flexShrink: 0, marginTop: 2 }} />
             <div>
               <p className="text-sm font-semibold mb-0.5" style={{ color: "#9a3412" }}>
@@ -1556,7 +1556,7 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
 
         {/* Route */}
         {trip.routeSummary && trip.routeSummary.legs.length > 0 && (
-          <div className="rounded-2xl p-5 mb-3 bg-card border border-border">
+          <div className="rounded-2xl p-5 mb-4 bg-card border border-border">
             <div className="flex items-center gap-2 mb-3">
               <Navigation size={15} style={{ color: P.fern }} />
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -1616,67 +1616,72 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
           </div>
         )}
 
-        {/* Live Conditions Banner */}
-        {trip.liveConditions && trip.liveConditions.length > 0 && (
-          <div
-            className="rounded-2xl p-4 mb-3 flex items-start gap-3"
-            style={{ background: `${P.aquamarine}20`, border: `1px solid ${P.aquamarine}` }}
-          >
-            <Navigation size={17} style={{ color: P.hunterGreen, flexShrink: 0, marginTop: 2 }} />
-            <div>
-              <p className="text-sm font-semibold mb-1.5 flex items-center gap-2" style={{ color: P.blackForest, fontFamily: "Sora, sans-serif" }}>
-                Live conditions
-                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ background: P.fern, color: "#fff" }}>Live</span>
-              </p>
-              <ul className="space-y-1">
-                {trip.liveConditions.map((c, i) => (
-                  <li key={i} className="text-xs leading-relaxed flex items-start gap-2" style={{ color: P.hunterGreen }}>
-                    <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: P.fern }} />
-                    {c}
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* Before you go — season, permits & live conditions grouped into one clean card */}
+        <div className="rounded-2xl mb-8 bg-card border border-border overflow-hidden">
+          <div className="px-5 pt-4 pb-3 flex items-center gap-2" style={{ borderBottom: "1px solid var(--border)" }}>
+            <Compass size={15} style={{ color: P.fern }} />
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Before you go</span>
           </div>
-        )}
+          <div className="divide-y divide-border">
+            {/* Season — always shown */}
+            <div className="px-5 py-3.5 flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${P.lightBlue}55` }}>
+                <Sun size={14} style={{ color: "#2a7fa5" }} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground mb-0.5">{trip.bestSeason}</p>
+                {trip.currentSeasonWarning && (
+                  <p className="text-xs leading-relaxed text-muted-foreground">{trip.currentSeasonWarning}</p>
+                )}
+              </div>
+            </div>
 
-        {/* Season Banner */}
-        <div
-          className="rounded-2xl p-4 mb-3 flex items-start gap-3"
-          style={{ background: `${P.lightBlue}40`, border: `1px solid ${P.lightBlue}` }}
-        >
-          <Sun size={17} style={{ color: "#2a7fa5", flexShrink: 0, marginTop: 2 }} />
-          <div>
-            <p className="text-sm font-semibold mb-0.5" style={{ color: "#1a5f7a" }}>
-              {trip.bestSeason}
-            </p>
-            {trip.currentSeasonWarning && (
-              <p className="text-xs leading-relaxed" style={{ color: "#2a7fa5" }}>{trip.currentSeasonWarning}</p>
+            {/* Permits & entry — conditional */}
+            {trip.permitRequired && (
+              <div className="px-5 py-3.5 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${P.amberHoney}24` }}>
+                  <AlertTriangle size={14} style={{ color: "#c47d00" }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground mb-0.5">Permits &amp; entry</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{trip.permitNote}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Live conditions — conditional, fresh from the web */}
+            {trip.liveConditions && trip.liveConditions.length > 0 && (
+              <div className="px-5 py-3.5 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${P.aquamarine}33` }}>
+                  <Navigation size={14} style={{ color: P.hunterGreen }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+                    Live conditions
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ background: P.fern, color: "#fff" }}>Live</span>
+                  </p>
+                  <ul className="space-y-1">
+                    {trip.liveConditions.map((c, i) => (
+                      <li key={i} className="text-xs leading-relaxed text-muted-foreground flex items-start gap-2">
+                        <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: P.fern }} />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Permit Banner */}
-        {trip.permitRequired && (
-          <div
-            className="rounded-2xl p-4 mb-8 flex items-start gap-3"
-            style={{ background: `${P.amberHoney}14`, border: `1px solid ${P.amberHoney}40` }}
-          >
-            <AlertTriangle size={17} style={{ color: "#c47d00", flexShrink: 0, marginTop: 2 }} />
-            <div>
-              <p className="text-sm font-semibold mb-0.5" style={{ color: "#7a4e00" }}>
-                Permits &amp; entry
-              </p>
-              <p className="text-xs leading-relaxed" style={{ color: "#9a6200" }}>{trip.permitNote}</p>
-            </div>
-          </div>
-        )}
-
         {/* Day Cards */}
         <div className="mb-10">
-          <h2 className="text-xl font-bold text-foreground mb-5" style={{ fontFamily: "Sora, sans-serif" }}>
-            Day-by-day plan
-          </h2>
+          <div className="flex items-baseline justify-between gap-3 mb-5">
+            <h2 className="text-xl font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>
+              Day-by-day plan
+            </h2>
+            <span className="text-xs text-muted-foreground flex-shrink-0">{trip.days_data.length} days · tap to expand</span>
+          </div>
 
           <div className="relative">
             <div className="absolute left-5 top-5 bottom-5 w-px" style={{ background: "var(--border)" }} />
@@ -1816,7 +1821,7 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
               <Sparkles size={15} style={{ color: P.amberHoney }} />
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Good to know</span>
             </div>
-            <ul className="space-y-1.5">
+            <ul className="grid sm:grid-cols-2 gap-x-5 gap-y-2">
               {trip.tips.map((t, i) => (
                 <li key={i} className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
                   <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: P.amberHoney }} />
