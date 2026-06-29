@@ -288,16 +288,17 @@ const INTERESTS = ["Lakes", "Trekking", "Waterfalls", "Forests", "Glaciers", "De
 type Featured = {
   id: string; name: string; region: string; season: string; days: string; highlight: string;
   image: string; vibe: VibeType; interests: string[]; idealDays: number; budget: number;
+  focal?: string;   // background-position; bias sky-heavy photos lower so the scene fills the frame
 };
 const FEATURED: Featured[] = [
   { id: "hunza-valley", name: "Hunza Valley", region: "Gilgit-Baltistan", season: "Apr – Oct", days: "5–6 days",
     highlight: "Blossoms, ancient forts & the Karakoram",
     image: "https://adventurertreks.pk/wp-content/uploads/2024/04/Best-Months-to-Visit-Hunza-Valley.webp",
-    vibe: "Photography", interests: ["Culture", "Heritage"], idealDays: 6, budget: 180000 },
+    vibe: "Photography", interests: ["Culture", "Heritage"], idealDays: 6, budget: 180000, focal: "center 62%" },
   { id: "skardu", name: "Skardu", region: "Gilgit-Baltistan", season: "Apr – Oct", days: "3–6 days",
     highlight: "Alpine lakes & high-altitude cold deserts",
     image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Shangrila_resort_skardu.jpg/1280px-Shangrila_resort_skardu.jpg",
-    vibe: "Adventure", interests: ["Lakes", "Trekking", "Desert"], idealDays: 6, budget: 190000 },
+    vibe: "Adventure", interests: ["Lakes", "Trekking", "Desert"], idealDays: 6, budget: 190000, focal: "center 68%" },
   { id: "fairy-meadows", name: "Fairy Meadows", region: "Gilgit-Baltistan", season: "May – Oct", days: "3–4 days",
     highlight: "Camp beneath Nanga Parbat, the Killer Mountain",
     image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Nanga_Parbat_The_Killer_Mountain.jpg/1280px-Nanga_Parbat_The_Killer_Mountain.jpg",
@@ -449,8 +450,8 @@ function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => vo
 
         {/* Hero content */}
         <div className="relative h-full flex flex-col justify-between">
-          {/* Upper text block */}
-          <div className="flex items-center flex-1 pb-36">
+          {/* Upper text block (no bottom spacer on mobile — the search bar is desktop-only) */}
+          <div className="flex items-center flex-1 pb-0 md:pb-36">
             <div className="max-w-6xl mx-auto px-8 w-full pt-20">
               <div
                 className="inline-flex items-center gap-2 border rounded-full px-4 py-1.5 mb-7"
@@ -706,20 +707,24 @@ function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => vo
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 2-up so cards stay WIDE on desktop — a wide frame makes object/bg-cover crop the
+              empty sky off the top of each photo (a narrow 3-up card barely crops, so the
+              pale sky showed). */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {FEATURED.map((d) => (
               <button
                 key={d.name}
                 onClick={() => onPickDestination(d)}
                 className="group text-left bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
-                <div className="relative h-56 overflow-hidden bg-muted">
-                  <img
-                    src={d.image}
-                    alt={d.name}
-                    loading="lazy"
-                    className="absolute inset-0 w-full h-full object-cover object-center block group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
+                <div className="relative h-60 overflow-hidden bg-muted">
+                  {/* CSS background-image always covers the frame edge-to-edge. focal lets
+                      sky-heavy photos sit lower so the scene fills the frame, not the sky. */}
+                  <div
+                    role="img"
+                    aria-label={d.name}
+                    className="absolute inset-0 bg-cover bg-no-repeat group-hover:scale-105 transition-transform duration-500"
+                    style={{ backgroundImage: `url("${d.image}")`, backgroundPosition: d.focal ?? "center" }}
                   />
                   <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(26,31,22,0.78) 0%, rgba(26,31,22,0.1) 55%, transparent 80%)" }} />
                   {/* Region chip + name overlaid on the photo for a more immersive card */}
