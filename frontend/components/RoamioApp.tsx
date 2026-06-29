@@ -76,6 +76,10 @@ const SAMPLE_TRIP = {
     } as Record<string, { label: string; cost: number; one_way_hours: number; round_trip_hours: number }>,
   },
   tips: ["Carry cash — ATMs are scarce up north", "Book stays ahead in peak season", "Pack warm layers even in summer"],
+  sources: [
+    { ref: "S1", source: "wikivoyage", title: "Hunza Valley", url: "https://en.wikivoyage.org/wiki/Hunza_Valley" },
+    { ref: "S2", source: "wikipedia", title: "Hunza Valley", url: "https://en.wikipedia.org/wiki/Hunza_Valley" },
+  ] as { ref: string; source: string; title: string; url: string }[],
   days_data: [
     {
       day: 1,
@@ -238,6 +242,7 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
       transportOptions: (api.route_summary?.transport_options || {}) as Record<string, { label: string; cost: number; one_way_hours: number; round_trip_hours: number }>,
     },
     tips: api.tips || [],
+    sources: (api.sources || []).map((s: any) => ({ ref: s.ref, source: s.source, title: s.title, url: s.url })),
     days_data: api.days.map((d: any) => ({
       day: d.day,
       destination: d.title,
@@ -1705,6 +1710,29 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Sources — the real travel content the day notes were grounded in (RAG citations) */}
+        {trip.sources && trip.sources.length > 0 && (
+          <div className="rounded-2xl p-5 mb-8 bg-card border border-border">
+            <div className="flex items-center gap-2 mb-1">
+              <Check size={15} style={{ color: P.fern }} />
+              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Grounded in real sources</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mb-3">The day-by-day notes are written from these real travel sources — not invented.</p>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(new Map(trip.sources.map(s => [s.url || s.title, s])).values()).map((s) => {
+                const label = s.source === "wikivoyage" ? "Wikivoyage" : s.source === "wikipedia" ? "Wikipedia" : "Web";
+                return (
+                  <a key={s.url || s.title} target="_blank" rel="noopener noreferrer" href={s.url || undefined}
+                     className="text-xs px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-2 text-foreground">
+                    <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ background: `${P.fern}1a`, color: P.fern }}>{label}</span>
+                    <span className="font-medium">{s.title}</span>
+                  </a>
+                );
+              })}
+            </div>
           </div>
         )}
 
