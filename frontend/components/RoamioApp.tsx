@@ -80,6 +80,7 @@ const SAMPLE_TRIP = {
     { ref: "S1", source: "wikivoyage", title: "Hunza Valley", url: "https://en.wikivoyage.org/wiki/Hunza_Valley" },
     { ref: "S2", source: "wikipedia", title: "Hunza Valley", url: "https://en.wikipedia.org/wiki/Hunza_Valley" },
   ] as { ref: string; source: string; title: string; url: string }[],
+  faithfulness: { checked: 3, verified: 3 },
   days_data: [
     {
       day: 1,
@@ -98,6 +99,7 @@ const SAMPLE_TRIP = {
       highlight: "Faisal Mosque at golden hour",
       notes: "Ease into the trip in the capital before the long drive north begins tomorrow.",
       sourceRefs: [] as string[],
+      verified: true as boolean | null,
     },
     {
       day: 2,
@@ -116,6 +118,7 @@ const SAMPLE_TRIP = {
       highlight: "Saif-ul-Muluk Lake",
       notes: "A long, scenic haul up the Kaghan Valley, ending at the alpine lake at dusk.",
       sourceRefs: [] as string[],
+      verified: true as boolean | null,
     },
     {
       day: 3,
@@ -134,6 +137,7 @@ const SAMPLE_TRIP = {
       highlight: "Attabad Lake boat ride",
       notes: "Karimabad, the capital of Hunza, offers an awe-inspiring view of Rakaposhi and the millennium-old Baltit Fort.",
       sourceRefs: ["S1", "S2"] as string[],
+      verified: true as boolean | null,
     },
     {
       day: 4,
@@ -152,6 +156,7 @@ const SAMPLE_TRIP = {
       highlight: "Katpana Desert dunes",
       notes: "Skardu pairs turquoise lakes with the high-altitude Katpana cold desert on the Indus.",
       sourceRefs: [] as string[],
+      verified: true as boolean | null,
     },
     {
       day: 5,
@@ -170,6 +175,7 @@ const SAMPLE_TRIP = {
       highlight: "",
       notes: "Fly back over the Karakoram if the weather holds, with a souvenir stop in Islamabad.",
       sourceRefs: [] as string[],
+      verified: true as boolean | null,
     },
   ],
 };
@@ -266,6 +272,7 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     },
     tips: api.tips || [],
     sources: (api.sources || []).map((s: any) => ({ ref: s.ref, source: s.source, title: s.title, url: s.url })),
+    faithfulness: api.summary?.faithfulness || { checked: 0, verified: 0 },
     days_data: api.days.map((d: any) => ({
       day: d.day,
       destination: d.title,
@@ -279,6 +286,7 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
       highlight: (d.activities && d.activities[0]) || "",
       notes: d.notes || "",
       sourceRefs: (d.source_refs || []) as string[],
+      verified: (d.verified ?? null) as boolean | null,
     })),
   };
 }
@@ -1742,6 +1750,11 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                         className="px-5 pb-5 pt-4"
                         style={{ borderTop: "1px solid var(--border)" }}
                       >
+                        {day.verified === true && (
+                          <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-3 px-2 py-1 rounded-full" style={{ background: `${P.fern}14`, color: P.fern }}>
+                            <Check size={10} /> Fact-checked
+                          </div>
+                        )}
                         {day.notes && (
                           <p className="text-sm leading-relaxed mb-4 pl-3" style={{ color: "var(--muted-foreground)", borderLeft: `2px solid ${P.fern}33` }}>
                             {day.notes}
@@ -1827,6 +1840,11 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                   <div>
                     <p className="text-sm font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Grounded in real sources</p>
                     <p className="text-[11px] text-muted-foreground">Day notes are written from these real travel sources — retrieved, not invented.</p>
+                    {trip.faithfulness && trip.faithfulness.checked > 0 && (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-full" style={{ background: `${P.fern}14`, color: P.fern }}>
+                        <Check size={11} /> {trip.faithfulness.checked} {trip.faithfulness.checked === 1 ? "day" : "days"} fact-checked against sources
+                      </span>
+                    )}
                   </div>
                 </div>
                 <span className="text-[11px] font-bold px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: `${P.fern}1a`, color: P.fern }}>
