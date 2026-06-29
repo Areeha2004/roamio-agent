@@ -95,6 +95,8 @@ const SAMPLE_TRIP = {
       estimatedCost: 18000,
       highlight: "Monal Restaurant views",
       season: "Year-round",
+      notes: "Ease into the trip in the capital before the long drive north begins tomorrow.",
+      sourceRefs: [] as string[],
     },
     {
       day: 2,
@@ -110,6 +112,8 @@ const SAMPLE_TRIP = {
       estimatedCost: 22000,
       highlight: "Saif-ul-Muluk Lake",
       season: "Jun – Sep",
+      notes: "A long, scenic haul up the Kaghan Valley, ending at the alpine lake at dusk.",
+      sourceRefs: [] as string[],
     },
     {
       day: 3,
@@ -125,6 +129,8 @@ const SAMPLE_TRIP = {
       estimatedCost: 24000,
       highlight: "Attabad Lake boat ride",
       season: "Apr – Oct",
+      notes: "Karimabad, the capital of Hunza, offers an awe-inspiring view of Rakaposhi and the millennium-old Baltit Fort.",
+      sourceRefs: ["S1", "S2"] as string[],
     },
     {
       day: 4,
@@ -140,6 +146,8 @@ const SAMPLE_TRIP = {
       estimatedCost: 26000,
       highlight: "Katpana Desert dunes",
       season: "May – Sep",
+      notes: "Skardu pairs turquoise lakes with the high-altitude Katpana cold desert on the Indus.",
+      sourceRefs: [] as string[],
     },
     {
       day: 5,
@@ -155,6 +163,8 @@ const SAMPLE_TRIP = {
       estimatedCost: 22500,
       highlight: "Aerial views of Karakoram",
       season: "Year-round",
+      notes: "Fly back over the Karakoram if the weather holds, with a souvenir stop in Islamabad.",
+      sourceRefs: [] as string[],
     },
   ],
 };
@@ -168,6 +178,14 @@ const API_URL =
   (typeof window !== "undefined" ? `http://${window.location.hostname}:8000` : "http://localhost:8000");
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Visual identity per grounding-source type (used by day citations + the Sources card).
+const SOURCE_META: Record<string, { label: string; color: string; bg: string }> = {
+  wikivoyage: { label: "Wikivoyage", color: "#2d6a4f", bg: "#2d6a4f14" },
+  wikipedia: { label: "Wikipedia", color: "#33617a", bg: "#33617a14" },
+  web: { label: "Web", color: "#b45309", bg: "#b4530914" },
+};
+const srcMeta = (s: string) => SOURCE_META[s] || { label: "Source", color: "#4a7856", bg: "#4a785614" };
 
 // Copy text reliably — including insecure contexts (a phone on http://<LAN-IP>),
 // where navigator.clipboard is undefined. Falls back to a hidden-textarea execCommand.
@@ -252,6 +270,8 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
       estimatedCost: perDay,
       highlight: d.activities[0] || d.notes,
       season: "",
+      notes: d.notes || "",
+      sourceRefs: (d.source_refs || []) as string[],
     })),
   };
 }
@@ -1322,6 +1342,9 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
   const [tweakInput, setTweakInput] = useState("");
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   // `trip` arrives as a prop — live API data, or SAMPLE_TRIP before a search runs.
+  // Look up a day's cited source refs (e.g. "S1") back to the full source record.
+  const sourceByRef = Object.fromEntries((trip.sources || []).map(s => [s.ref, s])) as Record<string, { ref: string; source: string; title: string; url: string }>;
+  const groundedCount = new Set((trip.sources || []).map(s => s.url || s.title)).size;
 
   // Save-on-share: the trip is only written to the DB the first time the user copies
   // its link (via onShare). Subsequent clicks reuse the id already on `trip`.
@@ -1415,6 +1438,11 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                 {text}
               </span>
             ))}
+            {groundedCount > 0 && (
+              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full font-semibold" style={{ background: `${P.fern}14`, color: P.fern }}>
+                <Check size={12} /> Grounded in {groundedCount} {groundedCount === 1 ? "source" : "sources"}
+              </span>
+            )}
           </div>
         </div>
 
@@ -1674,6 +1702,11 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                         className="px-5 pb-5 pt-4"
                         style={{ borderTop: "1px solid var(--border)" }}
                       >
+                        {day.notes && (
+                          <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--muted-foreground)" }}>
+                            {day.notes}
+                          </p>
+                        )}
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Activities</p>
                         <ul className="space-y-2">
                           {day.activities.map((act, i) => (
@@ -1686,6 +1719,30 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                             </li>
                           ))}
                         </ul>
+
+                        {/* Per-day grounding — which real sources this day was written from */}
+                        {day.sourceRefs && day.sourceRefs.length > 0 && (
+                          <div className="mt-4 pt-3" style={{ borderTop: "1px dashed var(--border)" }}>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
+                              <Check size={11} style={{ color: P.fern }} /> Grounded in
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {day.sourceRefs.map(ref => {
+                                const s = sourceByRef[ref];
+                                if (!s) return null;
+                                const m = srcMeta(s.source);
+                                return (
+                                  <a key={ref} href={s.url || undefined} target="_blank" rel="noopener noreferrer"
+                                     className="text-[11px] px-2 py-1 rounded-lg flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                                     style={{ background: m.bg, color: m.color }}>
+                                    <span className="font-bold">{m.label}</span>
+                                    <span className="opacity-75 max-w-[140px] truncate">{s.title}</span>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1715,20 +1772,36 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
 
         {/* Sources — the real travel content the day notes were grounded in (RAG citations) */}
         {trip.sources && trip.sources.length > 0 && (
-          <div className="rounded-2xl p-5 mb-8 bg-card border border-border">
-            <div className="flex items-center gap-2 mb-1">
-              <Check size={15} style={{ color: P.fern }} />
-              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Grounded in real sources</span>
+          <div className="rounded-2xl mb-8 overflow-hidden border border-border bg-card">
+            {/* Header band — frames the grounding as a trust feature */}
+            <div className="p-5 pb-4" style={{ background: `linear-gradient(135deg, ${P.fern}0f, transparent)` }}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${P.fern}1a` }}>
+                    <Check size={16} style={{ color: P.fern }} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Grounded in real sources</p>
+                    <p className="text-[11px] text-muted-foreground">Day notes are written from these real travel sources — retrieved, not invented.</p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: `${P.fern}1a`, color: P.fern }}>
+                  {groundedCount} {groundedCount === 1 ? "source" : "sources"}
+                </span>
+              </div>
             </div>
-            <p className="text-[11px] text-muted-foreground mb-3">The day-by-day notes are written from these real travel sources — not invented.</p>
-            <div className="flex flex-wrap gap-2">
+            {/* Source cards */}
+            <div className="px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {Array.from(new Map(trip.sources.map(s => [s.url || s.title, s])).values()).map((s) => {
-                const label = s.source === "wikivoyage" ? "Wikivoyage" : s.source === "wikipedia" ? "Wikipedia" : "Web";
+                const m = srcMeta(s.source);
                 return (
                   <a key={s.url || s.title} target="_blank" rel="noopener noreferrer" href={s.url || undefined}
-                     className="text-xs px-3 py-2 rounded-xl border border-border bg-muted hover:border-primary/50 transition-colors flex items-center gap-2 text-foreground">
-                    <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ background: `${P.fern}1a`, color: P.fern }}>{label}</span>
-                    <span className="font-medium">{s.title}</span>
+                     className="group rounded-xl border border-border p-3 flex items-center gap-3 hover:shadow-md transition-all bg-background">
+                    <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded-md flex-shrink-0" style={{ background: m.bg, color: m.color }}>
+                      {m.label}
+                    </span>
+                    <span className="text-sm font-medium text-foreground flex-1 truncate">{s.title}</span>
+                    <ArrowRight size={14} className="flex-shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" style={{ color: m.color }} />
                   </a>
                 );
               })}
