@@ -26,6 +26,7 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "agent"))
 sys.path.insert(0, str(ROOT / "db"))
 from orchestrator import generate_itinerary, graph  # noqa: E402
+from tweak import interpret_tweak  # noqa: E402
 from store import save_trip, get_trip  # noqa: E402
 
 app = FastAPI(title="Roamio API", version="0.1.0")
@@ -63,9 +64,31 @@ class PlanRequest(BaseModel):
     exclude: list[str] = []              # destination names/ids to avoid ("somewhere else")
 
 
+class TweakRequest(BaseModel):
+    """A free-text 'tweak this trip' request plus the current plan context."""
+    tweak: str
+    days: int = 5
+    budget_pkr: int = 75000
+    vibe: str = ""
+    interests: list[str] = []
+    transport: str = "car"
+    style: str = "standard"
+    month: int = 7
+    destinations: list[str] = []   # current destination names, for context
+    has_focus: bool = False
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.post("/interpret-tweak")
+def interpret_tweak_endpoint(req: TweakRequest):
+    """Parse a free-text tweak into structured edit ops. Returns {ok:false} on failure so the
+    frontend can fall back to its legacy regex handler — a tweak never hard-fails."""
+    ops = interpret_tweak(req.model_dump(), req.tweak)
+    return {"ok": False} if ops is None else {"ok": True, "ops": ops}
 
 
 def _to_request(req: PlanRequest) -> dict:
