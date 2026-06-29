@@ -121,25 +121,37 @@ def replan_node(state: TripState) -> dict:
         return {"stops": stops, "replan_notes": notes, "replan_count": state["replan_count"] + 1}
 
     over_budget = feas["budget"]["status"] == "over_budget"
-    # 1) cheaper transport first — keep the destination
-    if over_budget and transport == "car":
-        notes.append("Switched to local/public transport to lower the cost.")
-        return {"transport": "local", "replan_notes": notes, "replan_count": state["replan_count"] + 1}
 
-    # 2) swap the farthest (priciest) stop for a closer/cheaper one from the candidate pool
+    # Swap/drop the farthest (priciest) stop — but any swap MUST still match the requested
+    # vibe/interests, so we never turn a 'glaciers & heritage' trip into an unrelated
+    # hill-station run. We also respect the user's transport choice: we don't silently
+    # switch car → local here ('Make it cheaper' does that explicitly at their request).
+    requested = {t.lower() for t in [req.get("vibe", ""), *req.get("interests", [])] if t}
+    def on_theme(cid):
+        return not requested or bool({t.lower() for t in _corpus[cid]["tags"]} & requested)
+
     farthest = route["ordered_stops"][-1]
     reason = "budget" if over_budget else "the days available"
     cheaper = next(
         (cid for cid in sorted(state.get("pool", []), key=_hub_hours)
-         if cid not in stops and _hub_hours(cid) < _hub_hours(farthest["id"])),
+         if cid not in stops and _hub_hours(cid) < _hub_hours(farthest["id"]) and on_theme(cid)),
         None,
     )
+
+    def note(msg):
+        if msg not in notes:
+            notes.append(msg)
+
     if cheaper:
         stops = [cheaper if s == farthest["id"] else s for s in stops]
-        notes.append(f"Swapped {farthest['name']} for {_corpus[cheaper]['name']} to fit {reason}.")
+        note(f"Swapped {farthest['name']} for {_corpus[cheaper]['name']} to fit {reason}.")
     elif len(stops) > 1:
         stops = [s for s in stops if s != farthest["id"]]
-        notes.append(f"Dropped {farthest['name']} to fit {reason}.")
+        note(f"Dropped {farthest['name']} to fit {reason}.")
+    elif over_budget and transport == "car":
+        # Keep the on-theme destination; be honest that it's over budget and how to fix it.
+        note(f"{farthest['name']} is over your budget — raise the budget, shorten the trip, "
+             f"or switch to local/public transport for a cheaper ride.")
     return {"stops": stops, "replan_notes": notes, "replan_count": state["replan_count"] + 1}
 
 
