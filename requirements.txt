@@ -11,3 +11,4 @@ chromadb==1.5.9
 pydantic==2.13.4
 python-dotenv==1.2.2
 supabase==2.31.0
+requests==2.34.2          # used by corpus/ingest_content.py (offline grounding-content build)

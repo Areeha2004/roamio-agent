@@ -638,7 +638,7 @@ function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => vo
                 >
                   <Check size={14} style={{ color: P.aquamarine, flexShrink: 0 }} />
                   <span className="text-xs text-white/75">
-                    <span className="text-white font-semibold">15+ destinations</span> · real routes &amp; permits
+                    <span className="text-white font-semibold">15 curated destinations</span> · real routes &amp; permits
                   </span>
                 </div>
               </div>

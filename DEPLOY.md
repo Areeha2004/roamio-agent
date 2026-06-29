@@ -21,14 +21,17 @@ Deploy the **backend first** (you need its URL for the frontend).
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `uvicorn api.main:app --host 0.0.0.0 --port $PORT`
 4. **Environment variables:**
-   - `OPENAI_API_KEY` = your OpenAI key
+   - `OPENAI_API_KEY` = your OpenAI key **(required)**
    - `ALLOWED_ORIGINS` = your Vercel URL (add after step 2 below; can edit anytime), e.g. `https://roamio.vercel.app`
+   - `TAVILY_API_KEY` *(optional)* — live road/weather conditions (degrades gracefully without it)
+   - `SUPABASE_URL`, `SUPABASE_KEY` *(optional)* — trip sharing (degrades gracefully without them)
 5. Deploy. Note the URL, e.g. `https://roamio-api.onrender.com`.
 6. Test: open `https://roamio-api.onrender.com/health` → `{"status":"ok"}`.
 
-> The Chroma index rebuilds on first request (re-embeds the corpus — a few seconds).
-> Render's free tier also spins down after ~15 min idle, so the first request after
-> idle is slow (cold start + rebuild). Fine for demos.
+> Both Chroma collections build on first request — the **destinations** index re-embeds
+> `corpus.json`, and the **grounding-content** index embeds the committed `corpus/content/*.json`
+> (a few seconds total). Render's free tier also spins down after ~15 min idle, so the first
+> request after idle is slow (cold start + build). Fine for demos.
 
 (Railway works too: it auto-detects the `Procfile` — just set the same env vars.)
 

@@ -1,124 +1,260 @@
 {
   "request": {
-    "days": 8,
-    "budget_pkr": 300000,
+    "days": 6,
+    "budget_pkr": 200000,
     "start_city": "Islamabad",
-    "group_type": "family",
+    "group_type": "couple",
     "vibe": "adventure",
-    "month": 7
+    "interests": [
+      "lakes"
+    ],
+    "month": 7,
+    "transport": "car",
+    "style": "standard",
+    "prefer": "hunza-valley",
+    "exclude": []
   },
   "summary": {
-    "title": "8-day family adventure to Hunza",
+    "title": "6-Day Adventure Trip to Hunza Valley",
     "feasible": true,
-    "destinations": ["hunza-valley"],
-    "total_cost_pkr": [157200, 444000],
+    "destinations": [
+      "hunza-valley"
+    ],
+    "destination_names": [
+      "Hunza Valley"
+    ],
+    "hero_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Hunza_Valley_HDR.jpg/1280px-Hunza_Valley_HDR.jpg",
+    "total_cost_pkr": 165600,
     "total_drive_hours": 36,
-    "headline": "A relaxed family loop up the Karakoram Highway to the Hunza Valley."
+    "season": {
+      "months": "April to October",
+      "highlights": "Cherry blossom in early April; lush green summers; golden autumn foliage in October",
+      "avoid": "December to February (heavy snow, KKH sections can close)"
+    },
+    "budget": {
+      "status": "comfortable",
+      "over_by_pkr": 0,
+      "budget_pkr": 200000
+    },
+    "headline": "Explore the breathtaking beauty of Hunza Valley in 6 days filled with adventure and culture!",
+    "faithfulness": {
+      "checked": 3,
+      "verified": 2
+    }
   },
   "warnings": [
-    { "type": "permit", "text": "Carry your CNIC; foreigners may need an NOC for restricted zones near Khunjerab." },
-    { "type": "season", "text": "Days are cold even in July at altitude — pack warm layers." },
-    { "type": "info", "text": "ATMs are scarce and unreliable — carry enough cash for the trip." }
+    {
+      "type": "live",
+      "text": "Roads in Hunza are open for travel."
+    },
+    {
+      "type": "live",
+      "text": "Current temperature in Hunza is 9.9°C."
+    },
+    {
+      "type": "info",
+      "text": "Roamio adjusted your plan: Dropped Naran & Kaghan Valley to fit the days available."
+    },
+    {
+      "type": "permit",
+      "text": "CNIC sufficient for Pakistani nationals. Foreigners do not need a permit for Hunza itself, but an NOC may be required for restricted border zones (e.g. Khunjerab/Shimshal area)."
+    },
+    {
+      "type": "season",
+      "text": "December to February (heavy snow, KKH sections can close)"
+    }
+  ],
+  "route_summary": {
+    "legs": [
+      {
+        "from": "Islamabad",
+        "to": "Hunza Valley",
+        "hours": 18,
+        "via": "by road (KKH), usually split over 2 days with an overnight in Chilas or Gilgit"
+      }
+    ],
+    "one_way_hours": 18.0,
+    "round_trip_hours": 36,
+    "transport": "car",
+    "transport_options": {
+      "car": {
+        "label": "Private car",
+        "cost": 66600,
+        "one_way_hours": 18.0,
+        "round_trip_hours": 36
+      },
+      "local": {
+        "label": "Local / public",
+        "cost": 25200,
+        "one_way_hours": 21.6,
+        "round_trip_hours": 43.2
+      }
+    }
+  },
+  "tips": [
+    "Carry cash — ATMs are scarce and unreliable",
+    "Book ahead in peak season (April blossom, summer)",
+    "Mobile signal is patchy; SCOM/Telenor work best",
+    "Days are cold even in summer — pack layers",
+    "Fuel up before entering remote valleys",
+    "Carry warm clothing even in July"
+  ],
+  "sources": [
+    {
+      "ref": "S1",
+      "source": "wikivoyage",
+      "title": "Hunza Valley",
+      "url": "https://en.wikivoyage.org/wiki/Hunza_Valley",
+      "dest_id": "hunza-valley"
+    },
+    {
+      "ref": "S2",
+      "source": "wikipedia",
+      "title": "Hunza Valley",
+      "url": "https://en.wikipedia.org/wiki/Hunza_Valley",
+      "dest_id": "hunza-valley"
+    },
+    {
+      "ref": "S3",
+      "source": "web",
+      "title": "25 Best Things to Do in Hunza Valley 2026: Places to Visit, Family Attractions & Travel Guide",
+      "url": "https://natureexplorertours.com/things-to-do-in-hunza-valley",
+      "dest_id": "hunza-valley"
+    },
+    {
+      "ref": "S4",
+      "source": "web",
+      "title": "The Top 20 Places to Visit in Hunza Valley- 2026 - BOOK NOW",
+      "url": "https://hunzaadventuretours.com/the-top-20-places-to-visit-in-hunza-valley-2026-hunza-adventure-tours",
+      "dest_id": "hunza-valley"
+    }
   ],
   "days": [
     {
       "day": 1,
       "type": "travel",
-      "title": "Islamabad → Chilas",
+      "title": "Journey to Chilas",
       "from": "Islamabad",
       "to": "Chilas",
-      "drive_hours": 8,
+      "drive_hours": 10.0,
       "stop_id": null,
+      "image": "",
       "activities": [],
-      "notes": "A long first day on the Karakoram Highway. Overnight in Chilas to break the journey."
+      "source_refs": [],
+      "notes": "Embark on an exciting journey from Islamabad to Chilas via the Karakoram Highway, where the stunning landscapes will leave you in awe. Enjoy the scenic views along the way, making stops to capture the beauty of the mountains and rivers.",
+      "verified": null
     },
     {
       "day": 2,
       "type": "travel",
-      "title": "Chilas → Karimabad (Hunza)",
+      "title": "Chilas to Hunza Valley",
       "from": "Chilas",
-      "to": "Karimabad",
-      "drive_hours": 8,
+      "to": "Hunza Valley",
+      "drive_hours": 8.0,
       "stop_id": null,
+      "image": "",
       "activities": [],
-      "notes": "Continue up the KKH, passing Nanga Parbat viewpoints, into the Hunza Valley by evening."
+      "source_refs": [],
+      "notes": "Continue your adventure as you drive from Chilas to Hunza Valley, soaking in the majestic views of the surrounding peaks. Arrive in Hunza and get ready to explore this enchanting region over the next few days.",
+      "verified": null
     },
     {
       "day": 3,
       "type": "stay",
-      "title": "Forts & old Karimabad",
+      "title": "Discovering Karimabad",
       "from": null,
       "to": null,
       "drive_hours": 0,
       "stop_id": "hunza-valley",
-      "activities": ["Baltit Fort", "Altit Fort"],
-      "notes": "Ease into the valley with the two historic forts and a walk through old Karimabad."
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Hunza_Valley_HDR.jpg/1280px-Hunza_Valley_HDR.jpg",
+      "activities": [
+        "Baltit Fort",
+        "Altit Fort",
+        "Local meal",
+        "Riverside walk",
+        "Bazaar stroll"
+      ],
+      "source_refs": [
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "notes": "Today, immerse yourself in the rich history of Karimabad by visiting the ancient Baltit and Altit Forts, which offer breathtaking views of Rakaposhi. Enjoy a local meal and take a leisurely stroll through the bazaar, experiencing the vibrant culture of Hunza.",
+      "verified": true
     },
     {
       "day": 4,
       "type": "stay",
-      "title": "Attabad Lake & Passu",
+      "title": "Adventure at Attabad Lake",
       "from": null,
       "to": null,
       "drive_hours": 0,
       "stop_id": "hunza-valley",
-      "activities": ["Attabad Lake (boating)", "Passu Cones viewpoint", "Hussaini Suspension Bridge"],
-      "notes": "A scenic day north — boating on Attabad Lake and photo stops at the Passu Cones."
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Hunza_Valley_HDR.jpg/1280px-Hunza_Valley_HDR.jpg",
+      "activities": [
+        "Attabad Lake (boating)",
+        "Passu Cones viewpoint",
+        "Eagle's Nest sunrise",
+        "Local meal",
+        "Leisure time"
+      ],
+      "source_refs": [
+        "S3",
+        "S4"
+      ],
+      "notes": "Experience the stunning turquoise waters of Attabad Lake with a boating adventure. Later, visit the Passu Cones viewpoint for incredible photo opportunities, and if you're up for it, catch the sunrise at Eagle's Nest for a magical start to your day.",
+      "verified": true
     },
     {
       "day": 5,
       "type": "stay",
-      "title": "Khunjerab Pass day trip",
+      "title": "Exploring Khunjerab Pass",
       "from": null,
       "to": null,
       "drive_hours": 0,
       "stop_id": "hunza-valley",
-      "activities": ["Khunjerab Pass day trip", "Eagle's Nest sunrise"],
-      "notes": "Early start for the Pakistan-China border at Khunjerab; catch the Eagle's Nest viewpoint for sunrise or sunset."
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Hunza_Valley_HDR.jpg/1280px-Hunza_Valley_HDR.jpg",
+      "activities": [
+        "Khunjerab Pass day trip",
+        "Hussaini Suspension Bridge",
+        "Local meal",
+        "Leisure time",
+        "Riverside walk"
+      ],
+      "source_refs": [
+        "S2",
+        "S4"
+      ],
+      "notes": "Take a day trip to the Khunjerab Pass and enjoy the stunning mountain scenery. On your return, walk across the Hussaini Suspension Bridge for an exhilarating experience, and relax with a local meal.",
+      "verified": false
     },
     {
       "day": 6,
       "type": "travel",
-      "title": "Karimabad → Chilas",
-      "from": "Karimabad",
-      "to": "Chilas",
-      "drive_hours": 8,
-      "stop_id": null,
-      "activities": [],
-      "notes": "Begin the return down the KKH, overnighting again in Chilas."
-    },
-    {
-      "day": 7,
-      "type": "travel",
-      "title": "Chilas → Islamabad",
-      "from": "Chilas",
+      "title": "Return to Islamabad",
+      "from": "Hunza Valley",
       "to": "Islamabad",
-      "drive_hours": 8,
+      "drive_hours": 10.0,
       "stop_id": null,
+      "image": "",
       "activities": [],
-      "notes": "The final long drive back to Islamabad. Arrive by evening."
-    },
-    {
-      "day": 8,
-      "type": "stay",
-      "title": "Buffer / departure",
-      "from": null,
-      "to": null,
-      "drive_hours": 0,
-      "stop_id": null,
-      "activities": [],
-      "notes": "A buffer day for rest or to absorb any delay on the mountain roads before heading home."
+      "source_refs": [],
+      "notes": "Begin your journey back to Islamabad, reflecting on the unforgettable experiences and breathtaking landscapes of Hunza Valley. This adventure will surely leave you with lasting memories of Pakistan's natural beauty.",
+      "verified": null
     }
   ],
   "cost_breakdown_pkr": {
-    "hotels": [42000, 210000],
-    "food": [48000, 96000],
-    "local_transport": [24000, 48000],
-    "long_haul_transport": [43200, 90000],
-    "total": [157200, 444000]
+    "hotels": 45000,
+    "food": 27000,
+    "local_transport": 27000,
+    "intercity_transport": 66600,
+    "total": 165600
   },
   "meta": {
     "share_id": null,
-    "disclaimer": "Costs are estimates stored as ranges — verify current prices before booking."
+    "disclaimer": "Costs are estimates — verify current prices before booking.",
+    "replan_notes": [
+      "Dropped Naran & Kaghan Valley to fit the days available."
+    ]
   }
 }

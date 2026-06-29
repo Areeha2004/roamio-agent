@@ -19,11 +19,14 @@ for the UI and as the target output for the writer.
 | Field | Type | Purpose / consumer |
 |---|---|---|
 | `request` | object | Echo of the user's constraints (provenance; the share page shows it) |
-| `summary` | object | Header card: title, feasibility, totals, one-line headline |
+| `summary` | object | Header card: title, feasibility, totals, budget status, faithfulness, headline |
 | `warnings` | array | Banner items — permit + season cautions |
+| `route_summary` | object | Route legs + one-way/round-trip hours + car-vs-local transport options |
+| `tips` | array | Practical "good to know" tips (deduped from the visited stops) |
+| `sources` | array | Grounding citations the day notes were written from (Wikivoyage/Wikipedia/web) |
 | `days` | array | The day-by-day cards (the core of the page) |
-| `cost_breakdown_pkr` | object | The cost table (from `estimate_cost`) |
-| `meta` | object | Disclaimer, share id (filled in Week 4) |
+| `cost_breakdown_pkr` | object | The cost table (single PKR numbers, from `estimate_cost`) |
+| `meta` | object | Disclaimer + `share_id` (set only when the user shares the trip) |
 
 ### `request` (echoed input)
 ```jsonc
@@ -34,12 +37,18 @@ Note `month` (1–12) is part of the input contract — `check_feasibility` need
 
 ### `summary`
 ```jsonc
-{ "title": "8-day family adventure to Hunza",   // LLM-written
+{ "title": "8-Day Adventure Trip to Hunza Valley",   // LLM-written
   "feasible": true,
-  "destinations": ["hunza-valley"],             // corpus ids
-  "total_cost_pkr": [157200, 444000],           // [min, max] range
+  "destinations": ["hunza-valley"],                  // corpus ids
+  "destination_names": ["Hunza Valley"],
+  "hero_image": "https://…",
+  "total_cost_pkr": 165600,                          // single PKR number (chosen stay tier)
   "total_drive_hours": 36,
-  "headline": "A relaxed family loop up the Karakoram Highway to Hunza." }  // LLM, 1 line
+  "season": { "months": "April to October", "highlights": "…", "avoid": "…" },
+  "budget": { "status": "comfortable", "over_by_pkr": 0, "budget_pkr": 200000 },
+  // budget.status ∈ comfortable | tight | slightly_over | over_budget
+  "faithfulness": { "checked": 3, "verified": 2 },   // stay-day notes fact-checked vs sources
+  "headline": "A relaxed loop up the Karakoram Highway to Hunza." }  // LLM, 1 line
 ```
 
 ### `warnings` — banner items
@@ -68,31 +77,52 @@ A `stay` day:
 { "day": 3, "type": "stay", "title": "Explore Karimabad",
   "from": null, "to": null, "drive_hours": 0,
   "stop_id": "hunza-valley",
-  "activities": ["Baltit Fort", "Attabad Lake (boating)"],   // from corpus
-  "notes": "Forts in the morning, lake in the afternoon." }
+  "image": "https://…",
+  "activities": ["Baltit Fort", "Attabad Lake (boating)"],   // corpus landmarks + generic experiences
+  "source_refs": ["S1", "S2"],     // which `sources` informed this day's note
+  "verified": true,                // faithfulness guard: true=clean, false=softened, null=not checked
+  "notes": "Forts in the morning, lake in the afternoon." }  // LLM, grounded in the sources
 ```
 
-### `cost_breakdown_pkr` — straight from `estimate_cost`
+### `route_summary`
 ```jsonc
-{ "hotels": [42000, 210000], "food": [48000, 96000],
-  "local_transport": [24000, 48000], "long_haul_transport": [43200, 90000],
-  "total": [157200, 444000] }
+{ "legs": [ { "from": "Islamabad", "to": "Hunza Valley", "hours": 18, "via": "via the KKH" } ],
+  "one_way_hours": 18, "round_trip_hours": 36,
+  "transport": "car",                              // chosen mode
+  "transport_options": {                           // both, so the UI can compare upfront
+    "car":   { "label": "Private car",     "cost": 20000, "one_way_hours": 18,   "round_trip_hours": 36 },
+    "local": { "label": "Local / public",  "cost": 14000, "one_way_hours": 21.6, "round_trip_hours": 43.2 } } }
+```
+
+### `sources` — grounding citations (RAG)
+```jsonc
+[ { "ref": "S1", "source": "wikivoyage", "title": "Hunza Valley", "url": "https://…", "dest_id": "hunza-valley" },
+  { "ref": "S2", "source": "wikipedia",  "title": "Hunza Valley", "url": "https://…", "dest_id": "hunza-valley" } ]
+```
+`source` ∈ `wikivoyage` | `wikipedia` | `web`. Each `days[].source_refs` points back here.
+
+### `cost_breakdown_pkr` — straight from `estimate_cost` (single PKR numbers)
+```jsonc
+{ "hotels": 84000, "food": 27000, "local_transport": 18000,
+  "intercity_transport": 20000, "total": 149000 }
 ```
 
 ### `meta`
 ```jsonc
-{ "share_id": null,                 // filled in Week 4 when trips are saved
-  "disclaimer": "Costs are estimates — verify before booking." }
+{ "share_id": null,                 // set to a real id ONLY when the user shares (POST /share)
+  "disclaimer": "Costs are estimates — verify current prices before booking." }
 ```
 
 ---
 
 ## Design notes
-- **Costs are always `[min, max]` ranges**, never single numbers — consistent with
-  the corpus and `estimate_cost`. The UI shows "157,200 – 444,000 PKR".
+- **Costs are single PKR numbers, not ranges.** A trip picks a stay tier
+  (budget/standard/luxury), so the cost is one number with a real per-component breakdown
+  (hotels/food/local/intercity) — see DECISIONS #003. The UI shows "PKR 149,000".
 - **`days[]` separates `travel` vs `stay`** so the UI can style them differently
   (a driving card vs an activity card) — one `type` field, no guessing.
-- **Deterministic fields vs LLM fields:** numbers (costs, drive hours, ids, activities)
-  come from the *tools/corpus* and must not be invented by the writer. The LLM only
-  writes the prose fields (`title`, `headline`, `notes`). This keeps the trustworthy
-  data trustworthy — the same grounding principle as `extract_destination`.
+- **Deterministic vs LLM fields:** the trustworthy numbers (costs, drive hours, ids, route,
+  feasibility, budget status) come from the *tools/corpus* and are never invented by the
+  writer. The LLM writes the prose (`title`, `headline`, `notes`) — now **grounded in real
+  retrieved `sources`** and **fact-checked** by the faithfulness guard, which softens any
+  unsupported specific claim and records the result in `verified` / `summary.faithfulness`.

@@ -27,7 +27,9 @@ output trustworthy, and it's the central design principle of the project.
 | Feasibility & the re-plan loop | `check_feasibility` — Python (season/time/budget) | ❌ |
 | Orchestration | a **LangGraph** state machine (flow coded by us) | ❌ |
 | Live road/weather | **Tavily** web search, summarized by the LLM | summary only |
-| The day-by-day prose | the **LLM** (`gpt-4o-mini`) writes titles & notes | ✅ |
+| The day-by-day prose | the **LLM** (`gpt-4o-mini`) writes titles & notes, **grounded in retrieved real sources** (RAG) and cited | ✅ (grounded) |
+| Faithfulness of the prose | an **LLM judge** checks each note's specific claims against its sources/corpus, softening anything unsupported | ✅ (verify) |
+| "Tweak this trip" | the **LLM** parses free-text into typed edit ops; **Python validates & applies** them | parse only |
 
 ---
 
@@ -55,10 +57,10 @@ makes it an *agent* and not a linear chain.
                  └────┬───────┘
                       ▼
                  ┌──────────┐
-                 │  write   │   LLM writes the day-by-day itinerary (grounded)
-                 └────┬─────┘
+                 │  write   │   LLM writes the day-by-day itinerary, GROUNDED in real
+                 └────┬─────┘   retrieved sources, then an LLM judge FACT-CHECKS each note
                       ▼
-                     END  ──►  saved to Supabase, returned with a share_id
+                     END  ──►  itinerary JSON returned (nothing persisted yet)
 ```
 
 The full request flow:
@@ -66,8 +68,12 @@ The full request flow:
 ```
 Next.js form  →  FastAPI POST /generate-itinerary/stream  →  LangGraph agent
    → (streams progress: "Searching… Building route… Checking conditions… Writing…")
-   → itinerary JSON  →  saved to Supabase  →  rendered in the UI  →  shareable /trip/[id]
+   → itinerary JSON  →  rendered in the UI
+   → saved to Supabase ONLY when the user shares → shareable /trip/[id]
 ```
+
+> **Save-on-share:** generating a trip persists nothing. A trip is written to Supabase the
+> first time the user copies its share link (`POST /share`), which mints the `share_id`.
 
 ---
 
@@ -79,7 +85,8 @@ Next.js form  →  FastAPI POST /generate-itinerary/stream  →  LangGraph agent
 | Backend | **FastAPI** (streaming NDJSON) |
 | LLM | **gpt-4o-mini** via `langchain-openai` |
 | Agent framework | **LangGraph** (`StateGraph` + conditional edge) |
-| RAG | OpenAI `text-embedding-3-small` + **Chroma** (`langchain-chroma`) |
+| RAG | OpenAI `text-embedding-3-small` + **Chroma** — two collections (destinations + grounding content) |
+| Grounding content | **Wikivoyage + Wikipedia + Tavily**, chunked & embedded for the writer to cite |
 | Live search | **Tavily** (road/weather conditions) |
 | Memory / sharing | **Supabase** (Postgres) |
 | Hosting | **Vercel** (frontend) + **Render** (backend) |
@@ -89,24 +96,30 @@ Next.js form  →  FastAPI POST /generate-itinerary/stream  →  LangGraph agent
 ## What's in the repo
 
 ```
-corpus/           the moat — 15 curated destinations + schema, validator, origin-hub table
+corpus/           the moat — 15 curated destinations + grounding content
   corpus.json       15 Northern-Pakistan destinations (data + photos)
   SCHEMA.md         field definitions (one field = one job)
   validate_corpus.py  schema/validity guardrail
   origin_hubs.json  start-city → Islamabad-hub drive legs
   extract_destination.py  LLM tool to draft new destinations from raw text
+  ingest_content.py   OFFLINE: pull Wikivoyage/Wikipedia/Tavily text per destination
+  content/            cached grounding text per destination (committed, reproducible)
 rag/
-  search.py         RAG: build/load the Chroma index, search_destinations()
+  search.py         RAG #1: destination retrieval (Chroma `destinations` collection)
+  content.py        RAG #2: grounding-content retrieval (Chroma `destination_content`)
 tools/
   planning.py       build_route · estimate_cost · check_feasibility (deterministic)
   web_search.py     Tavily wrapper (graceful if unavailable)
 agent/
   orchestrator.py   the LangGraph state machine (generate_itinerary)
-  writer.py         the LLM itinerary writer (grounded prose)
+  writer.py         the LLM writer — grounded in real sources + a faithfulness guard
+  tweak.py          NL "tweak this trip" → typed edit ops (structured output)
 db/
   store.py          Supabase save_trip / get_trip (graceful if unconfigured)
 api/
-  main.py           FastAPI: /generate-itinerary, /stream, /trip/{id}
+  main.py           FastAPI: /generate-itinerary(/stream), /interpret-tweak, /share, /trip/{id}
+evals/
+  run.py            lean harness: deterministic planning checks + opt-in E2E (`--e2e`)
 frontend/           Next.js app (planner form + itinerary + shareable page)
 DECISIONS.md        engineering decision log (the reasoning behind key choices)
 BACKLOG.md          consciously deferred work + the post-v0 roadmap
@@ -135,11 +148,23 @@ pnpm install
 pnpm dev                          # http://localhost:3000
 ```
 
-Open **http://localhost:3000**, fill the planner, and generate a trip. The Chroma index
-builds itself on the first request (re-embeds the corpus — cheap).
+Open **http://localhost:3000**, fill the planner, and generate a trip. Both Chroma
+collections (destinations + grounding content) build themselves on the first request — the
+destination index re-embeds `corpus.json`; the content index embeds the committed
+`corpus/content/*.json`. No manual build step.
 
 > Without Supabase/Tavily configured, the app still runs — sharing and live-conditions just
 > degrade gracefully.
+
+**Evals** (optional):
+```bash
+python evals/run.py            # deterministic planning checks — fast, no LLM/$$
+python evals/run.py --e2e      # + a small full-pipeline pass (real LLM + web calls)
+```
+
+> To refresh the grounding content from the web, re-run `python corpus/ingest_content.py`
+> then `python rag/content.py --rebuild`. The cached `corpus/content/` is committed, so this
+> is only needed when you add destinations or want fresher sources.
 
 ---
 
@@ -167,6 +192,22 @@ Recorded in **[DECISIONS.md](DECISIONS.md)** — a few highlights:
   the requested vibes/interests, so the choice reflects the inputs (not one generic best-match).
 - **Suggest, don't book** — logistics are deep-links (hotels/bus/jeep/flights), avoiding
   fragile third-party integrations.
+- **RAG-grounded, cited writer** (ADR 012) — day notes are written from real retrieved sources
+  (Wikivoyage/Wikipedia/web) and show their citations, instead of improvising plausible prose.
+- **Faithfulness guard** (ADR 013) — an LLM judge fact-checks each note's specific claims against
+  its sources + corpus landmarks, softening (not deleting) anything unsupported.
+- **Natural-language tweaking** (ADR 014) — free-text changes ("cheaper, add a cultural day, skip
+  Murree") are parsed by the LLM into typed edit ops that Python validates and applies.
+- **Lean evals** (ADR 015) — `evals/run.py` asserts the deterministic math and (opt-in) runs a
+  small E2E pass that reads the system's own faithfulness, rather than stacking another judge.
+
+## Status & known limitations
+
+Roamio is **Northern-Pakistan-only by design** — the single-hub router is correct for the
+northern corridor, where roads genuinely funnel through Islamabad. Reaching non-northern or
+AJK-internal start cities accurately needs a **multi-hub / road-tree** router, consciously
+**deferred to a future version** (see [BACKLOG.md](BACKLOG.md)). Costs and drive times are
+estimates — the UI says so, and a trip is never booked, only suggested.
 
 ---
 

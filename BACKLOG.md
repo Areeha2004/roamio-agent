@@ -36,38 +36,27 @@ accurate. The fix is real work that doesn't teach RAG/agents (the month's goal).
 
 ## Post-v0 Roadmap (agreed 2026-06-25, executing in order)
 
-Prioritised by dependencies + value. LangGraph first because everything else plugs
-into it.
+The post-v0 plan (agreed 2026-06-25) is now **complete**:
 
-**Phase 0 · Stabilize what's live**
-- [ ] Confirm deployed app works end-to-end after the CORS fix (trip generates on Vercel)
-- [ ] If backend hits the 512 MB free-tier limit: slim `chromadb` → in-memory cosine search
+- [x] **LangGraph backbone** — search → plan → (re-plan loop) → conditions → write
+- [x] **Live conditions via Tavily** — surfaced as itinerary warnings
+- [x] **Streaming progress** — NDJSON, node-by-node to the UI
+- [x] **Memory + real sharing** — Supabase `save_trip`/`get_trip`, **save-on-share** → `share_id`, `/trip/[id]`
+- [x] **Data depth** — corpus expanded to **15** destinations
+- [x] **RAG-grounded, cited writer** (DECISIONS #012) + **faithfulness guard** (#013)
+- [x] **Natural-language tweaking** (#014, replaces the old regex stop-exclusion) + **lean evals** (#015)
+- [x] **README / docs** brought in line with the shipped system
 
-**Phase 1 · LangGraph backbone** ⭐ (the agent refactor — IN PROGRESS)
-- [ ] Convert the 4 tools + writer into LangGraph nodes (search → plan → write)
-- [ ] Conditional re-plan edge (feasibility → replan → plan, else → write)
-- [ ] Point `generate_itinerary()` at the compiled graph (same output)
-- Unlocks: streaming, memory, the web_search node, the interview story
+---
 
-**Phase 2 · Live conditions via Tavily** ⭐
-- [ ] `web_search` node: after route is built, query live weather / road blockages /
-      pass status for the stops + passes + travel month
-- [ ] Surface as itinerary warnings; optionally feed feasibility (closed pass → flag)
-- `TAVILY_API_KEY` already set on Render.
+## Deferred to the next version
 
-**Phase 3 · Streaming progress**
-- [ ] Stream graph nodes to the UI ("Searching… Building route… Checking conditions… Writing…")
-- Depends on Phase 1.
-
-**Phase 4 · Memory + real sharing** (growth engine)
-- [ ] Supabase `trips` table + `save_trip()` → returns `share_id`
-- [ ] Frontend real routes (`/`, `/plan`, `/trip/[id]`); `/trip/[id]` loads saved trip
-- [ ] Real "Copy Share Link"; also fixes reload-loses-trip
-
-**Phase 5 · Data depth**
-- [ ] Expand corpus 5 → 15 (`extract_destination` + verify). Can run in parallel.
-
-**Phase 6 · Polish & ship-proof**
-- [ ] "Remove Skardu"-style stop-exclusion tweaks
-- [ ] Log the activity-grounding decision (DECISIONS.md)
-- [ ] Real README + 90-sec demo video
+- **Multi-hub / road-tree routing** — the big one (see the routing section above). Unlocks
+  **non-northern destinations** (Lahore, Punjab) and accurate **AJK-internal origins**. v1 is
+  northern-only on purpose, because the single hub is correct there.
+- **Conversational planner** — a chat-first front door (NL → structured `PlanRequest` via
+  tool-calling, with follow-up questions) as an alternative to the form.
+- **Richer evals** — grow the golden set + add an LLM-judge rubric layer once the system is
+  being actively iterated again (today's lean harness is enough for a frozen v1).
+- **Free-tier hardening** — if the backend hits Render's 512 MB limit, slim `chromadb`
+  → in-memory cosine search.
