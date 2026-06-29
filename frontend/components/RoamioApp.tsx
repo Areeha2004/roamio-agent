@@ -297,7 +297,7 @@ const FEATURED: Featured[] = [
     vibe: "Photography", interests: ["Culture", "Heritage"], idealDays: 6, budget: 180000, focal: "center 62%" },
   { id: "skardu", name: "Skardu", region: "Gilgit-Baltistan", season: "Apr – Oct", days: "3–6 days",
     highlight: "Alpine lakes & high-altitude cold deserts",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Shangrila_resort_skardu.jpg/1280px-Shangrila_resort_skardu.jpg",
+    image: "https://northbackend.northonwheels.com/storage/uploads/image_6175.jpg",
     vibe: "Adventure", interests: ["Lakes", "Trekking", "Desert"], idealDays: 6, budget: 190000, focal: "center 68%" },
   { id: "fairy-meadows", name: "Fairy Meadows", region: "Gilgit-Baltistan", season: "May – Oct", days: "3–4 days",
     highlight: "Camp beneath Nanga Parbat, the Killer Mountain",
