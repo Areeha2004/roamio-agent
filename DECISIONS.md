@@ -351,3 +351,31 @@ sources AND verifies against them" — the trust story the UI can now show.
 **Takeaway.** An LLM-as-judge is most useful when it *repairs* rather than *rejects*, and
 when "ground truth" includes every trusted source you have — not just the one pipeline that
 happened to retrieve this turn.
+
+---
+
+## 014 · Natural-language trip tweaking — LLM parses intent, code applies it
+**Date:** 2026-06-29 (post-v0) · **Area:** AI / UX / structured output
+
+**Challenge.** "Tweak this trip" was regex-only — it caught "+2 days", "make it cheaper",
+"remove X" and nothing else. "Skip the long drives and add a cultural day, keep it under
+100k" did nothing. The brittle pattern list was the most obvious place to add real AI.
+
+**Decision.** A free-text tweak now goes to `/interpret-tweak`, where an LLM (temp 0, structured
+output) parses it into a typed `TweakOps` schema (set_days/days_delta, set_budget/budget_delta_pct,
+set_transport, set_stay_style, set_vibe, add/remove_interests, exclude_destinations, clear_focus,
+set_month, unsupported, summary). The frontend's `applyTweakOps` validates and applies them
+deterministically — **absolute fields win over deltas** (the model sometimes emits both) — then
+re-plans. Unsupported asks (book a hotel, a flight, a non-northern place) are flagged and explained
+instead of silently ignored. If the interpreter is unreachable, the legacy regex path still runs, so
+a tweak never hard-fails.
+
+**Why.** This is the cleanest expression of the project's spine: the **LLM interprets messy human
+intent into a typed schema; code makes the actual decisions** (clamping, precedence, validation).
+It turns a keyword-matcher into something that understands compound, conversational requests, while
+keeping every applied change deterministic and safe. The summary line gives the user honest feedback
+on what changed.
+
+**Takeaway.** The highest-leverage place for an LLM is often the messy edges of input parsing — not
+the core logic. Let it normalise intent into structure, then keep the consequential decisions in code
+you can test. Deterministic precedence rules (absolute > delta) absorb the model's over-eagerness.
