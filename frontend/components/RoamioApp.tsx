@@ -713,12 +713,12 @@ function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => vo
                 onClick={() => onPickDestination(d)}
                 className="group text-left bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
-                <div className="relative h-52 overflow-hidden bg-muted">
+                <div className="relative h-56 overflow-hidden bg-muted">
                   <img
                     src={d.image}
                     alt={d.name}
                     loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="absolute inset-0 w-full h-full object-cover object-center block group-hover:scale-105 transition-transform duration-500"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
                   />
                   <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(26,31,22,0.78) 0%, rgba(26,31,22,0.1) 55%, transparent 80%)" }} />
