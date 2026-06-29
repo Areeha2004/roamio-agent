@@ -319,6 +319,67 @@ function applyTweak(form: PlanForm, tweak: string): PlanForm {
   return f;
 }
 
+// Structured edit ops returned by the LLM tweak interpreter (POST /interpret-tweak).
+type TweakOps = {
+  set_days?: number | null; days_delta?: number | null;
+  set_budget_pkr?: number | null; budget_delta_pct?: number | null;
+  set_transport?: "car" | "local" | null;
+  set_stay_style?: "budget" | "standard" | "luxury" | null;
+  set_vibe?: string | null; add_interests?: string[]; remove_interests?: string[];
+  exclude_destinations?: string[]; clear_focus?: boolean; set_month?: number | null;
+  unsupported?: boolean; summary?: string;
+};
+const clampNum = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+
+// Apply LLM-parsed ops to the form, deterministically and validated. ABSOLUTE fields win
+// over deltas (the model sometimes emits both) — this is the "code decides" half.
+function applyTweakOps(form: PlanForm, ops: TweakOps): PlanForm {
+  const f: PlanForm = { ...form };
+  if (typeof ops.set_days === "number") f.days = clampNum(Math.round(ops.set_days), 1, 30);
+  else if (typeof ops.days_delta === "number") f.days = clampNum(f.days + Math.round(ops.days_delta), 1, 30);
+  if (typeof ops.set_budget_pkr === "number") f.budget = Math.max(10000, Math.round(ops.set_budget_pkr));
+  else if (typeof ops.budget_delta_pct === "number") f.budget = Math.max(10000, Math.round(f.budget * (1 + ops.budget_delta_pct / 100)));
+  if (ops.set_transport === "car" || ops.set_transport === "local") f.transport = ops.set_transport;
+  if (ops.set_stay_style === "budget" || ops.set_stay_style === "standard" || ops.set_stay_style === "luxury") f.stayStyle = ops.set_stay_style;
+  if (ops.set_vibe && (["Adventure", "Chill", "Photography", "Religious"] as string[]).includes(ops.set_vibe)) f.vibes = [ops.set_vibe as VibeType];
+  if (ops.add_interests?.length) {
+    const have = new Set(f.interests.map(i => i.toLowerCase()));
+    f.interests = [...f.interests, ...ops.add_interests.filter(i => !have.has(i.toLowerCase()))];
+  }
+  if (ops.remove_interests?.length) {
+    const drop = new Set(ops.remove_interests.map(i => i.toLowerCase()));
+    f.interests = f.interests.filter(i => !drop.has(i.toLowerCase()));
+  }
+  if (ops.exclude_destinations?.length) {
+    f.exclude = [...f.exclude, ...ops.exclude_destinations];
+    f.focusDestination = undefined;   // excluding a place means we no longer anchor on it
+  }
+  if (ops.clear_focus) f.focusDestination = undefined;
+  if (typeof ops.set_month === "number" && ops.set_month >= 1 && ops.set_month <= 12) f.month = Math.round(ops.set_month);
+  return f;
+}
+
+// Legacy regex tweak path (fallback when the LLM interpreter is unreachable).
+function legacyTweak(lastForm: PlanForm, tweak: string, destNames: string[]): PlanForm {
+  let form = applyTweak(lastForm, tweak);
+  const t = tweak.toLowerCase();
+  if (/other place|somewhere else|different (place|destination|spot)|change (the )?(destination|place)|elsewhere|new place|remove|without|skip|exclude/.test(t)) {
+    form = { ...form, focusDestination: undefined };
+  }
+  if (/other place|somewhere else|different (place|destination|spot)|change (the )?(destination|place)|elsewhere|new place/.test(t)) {
+    form = { ...form, exclude: [...form.exclude, ...destNames] };
+  }
+  const rm = t.match(/(?:remove|without|skip|exclude)\s+([a-z][a-z &]+)/);
+  if (rm && rm[1]) form = { ...form, exclude: [...form.exclude, rm[1].trim()] };
+  destNames.forEach((name) => {
+    const first = name.split(/[\s&]+/)[0].toLowerCase();
+    if (t.includes(name.toLowerCase()) || (first.length > 3 && t.includes(first))) {
+      form = { ...form, exclude: [...form.exclude, name], focusDestination: undefined };
+    }
+  });
+  return form;
+}
+
 const CITIES = [
   "Islamabad", "Rawalpindi", "Lahore", "Karachi", "Peshawar", "Faisalabad",
   "Multan", "Quetta", "Sialkot", "Gujranwala", "Gujrat", "Hyderabad",
@@ -1351,7 +1412,7 @@ function LoadingPage({ status }: { status?: string }) {
 }
 
 // ─── Itinerary Page ───────────────────────────────────────────────────────────
-export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typeof SAMPLE_TRIP; onTweak: (tweak: string) => void; onShare?: () => Promise<string | null>; onNewTrip: () => void }) {
+export function ItineraryPage({ trip, onTweak, onShare, onNewTrip, tweakNote }: { trip: typeof SAMPLE_TRIP; onTweak: (tweak: string) => void; onShare?: () => Promise<string | null>; onNewTrip: () => void; tweakNote?: string }) {
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [tweakInput, setTweakInput] = useState("");
@@ -1919,17 +1980,20 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
           </button>
 
           <div className="bg-card border border-border rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-1">
               <Edit3 size={14} style={{ color: P.fern }} />
               <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Tweak this trip</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ background: `${P.fern}1a`, color: P.fern }}>AI</span>
             </div>
+            <p className="text-[11px] text-muted-foreground mb-3">Ask in plain words — Roamio figures out what to change.</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={tweakInput}
                 onChange={e => setTweakInput(e.target.value)}
-                placeholder="e.g. make it cheaper · add 2 days · remove Skardu"
-                className="flex-1 bg-input-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:border-primary transition-all"
+                onKeyDown={e => { if (e.key === "Enter" && tweakInput.trim()) onTweak(tweakInput); }}
+                placeholder="e.g. skip the long drives and add a cultural day, under 100k"
+                className="flex-1 min-w-0 bg-input-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:border-primary transition-all"
               />
               <button
                 onClick={() => onTweak(tweakInput)}
@@ -1940,16 +2004,22 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
-              {["Somewhere else", "Make it cheaper", "+2 days", "Add a rest day"].map(s => (
+              {["Make it cheaper", "Add a cultural day", "More relaxing", "Somewhere else"].map(s => (
                 <button
                   key={s}
-                  onClick={() => setTweakInput(s)}
+                  onClick={() => onTweak(s)}
                   className="text-[11px] text-muted-foreground bg-muted hover:bg-accent hover:text-foreground px-2.5 py-1 rounded-full transition-colors"
                 >
                   {s}
                 </button>
               ))}
             </div>
+            {tweakNote && (
+              <div className="mt-3 flex items-start gap-2 text-xs rounded-xl px-3 py-2" style={{ background: `${P.fern}10`, color: P.hunterGreen }}>
+                <Sparkles size={13} style={{ color: P.fern, flexShrink: 0, marginTop: 1 }} />
+                <span className="leading-relaxed">{tweakNote}</span>
+              </div>
+            )}
           </div>
 
           <button
@@ -2021,6 +2091,7 @@ export default function App() {
   const [rawTrip, setRawTrip] = useState<any>(null);   // backend itinerary JSON, saved only on share
   const [seed, setSeed] = useState<PlannerSeed | undefined>(undefined);  // featured-destination prefill
   const [lastForm, setLastForm] = useState<PlanForm | null>(null);
+  const [tweakNote, setTweakNote] = useState("");   // confirmation/feedback from the last tweak
   const [status, setStatus] = useState("");
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -2079,29 +2150,41 @@ export default function App() {
   };
 
   // "Tweak this trip": adjust the last form and re-plan (no infinite loading).
-  const handleTweak = (tweak: string) => {
+  // Tweak this trip: an LLM parses the free-text request into structured edit ops (validated
+  // & applied by applyTweakOps), re-planning afterward. Falls back to the legacy regex path
+  // if the interpreter is unreachable, so a tweak never hard-fails.
+  const handleTweak = async (tweak: string) => {
     if (!lastForm) { setPage("planner"); return; }
-    let form = applyTweak(lastForm, tweak);
-    const t = tweak.toLowerCase();
-    // Any "change the place" tweak must release the anchored focus, or search would
-    // force the same destination straight back in.
-    if (/other place|somewhere else|different (place|destination|spot)|change (the )?(destination|place)|elsewhere|new place|remove|without|skip|exclude/.test(t)) {
-      form = { ...form, focusDestination: undefined };
-    }
-    // "somewhere else" / "different place" → exclude the current destinations
-    if (/other place|somewhere else|different (place|destination|spot)|change (the )?(destination|place)|elsewhere|new place/.test(t)) {
-      form = { ...form, exclude: [...form.exclude, ...trip.destinationNames] };
-    }
-    // "remove X" / "without X" → exclude a named place
-    const rm = t.match(/(?:remove|without|skip|exclude)\s+([a-z][a-z &]+)/);
-    if (rm && rm[1]) form = { ...form, exclude: [...form.exclude, rm[1].trim()] };
-    // exclude any currently-shown destination the user names (e.g. "no naran kaghan")
-    trip.destinationNames.forEach((name) => {
-      const first = name.split(/[\s&]+/)[0].toLowerCase();
-      if (t.includes(name.toLowerCase()) || (first.length > 3 && t.includes(first))) {
-        form = { ...form, exclude: [...form.exclude, name], focusDestination: undefined };
+    setTweakNote("");
+    let form: PlanForm | null = null;
+    let note = "";
+    try {
+      const res = await fetch(`${API_URL}/interpret-tweak`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tweak,
+          days: lastForm.days, budget_pkr: lastForm.budget, vibe: lastForm.vibes[0] || "",
+          interests: lastForm.interests.map(i => i.toLowerCase()),
+          transport: lastForm.transport, style: lastForm.stayStyle, month: lastForm.month,
+          destinations: trip.destinationNames, has_focus: !!lastForm.focusDestination,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && data.ops) {
+          if (data.ops.unsupported) {
+            setTweakNote(data.ops.summary || "I can't do that one — try changing days, budget, vibe, transport, or a destination.");
+            return; // don't re-plan on an unsupported request
+          }
+          form = applyTweakOps(lastForm, data.ops as TweakOps);
+          note = data.ops.summary || "";
+        }
       }
-    });
+    } catch { /* fall through to the legacy regex path */ }
+
+    if (!form) form = legacyTweak(lastForm, tweak, trip.destinationNames);
+    if (note) setTweakNote(note);
     runPlan(form);
   };
 
@@ -2159,7 +2242,7 @@ export default function App() {
       {page === "landing"    && <LandingPage onPlanClick={() => { setSeed(undefined); setPage("planner"); }} onPickDestination={handlePickDestination} />}
       {page === "planner"    && <PlannerPage onSubmit={handlePlanSubmit} seed={seed} />}
       {page === "loading"    && <LoadingPage status={status} />}
-      {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={handleTweak} onShare={handleShare} onNewTrip={() => setPage("planner")} />}
+      {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={handleTweak} onShare={handleShare} onNewTrip={() => setPage("planner")} tweakNote={tweakNote} />}
       {page === "error"      && <ErrorPage onRetry={() => setPage("planner")} />}
     </div>
   );
