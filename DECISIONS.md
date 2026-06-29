@@ -379,3 +379,29 @@ on what changed.
 **Takeaway.** The highest-leverage place for an LLM is often the messy edges of input parsing — not
 the core logic. Let it normalise intent into structure, then keep the consequential decisions in code
 you can test. Deterministic precedence rules (absolute > delta) absorb the model's over-eagerness.
+
+---
+
+## 015 · Lean evals harness — assert the math, read the guard
+**Date:** 2026-06-30 (post-v0) · **Area:** Evals / quality
+
+**Challenge.** We wanted a real eval harness without over-engineering one for a 15-destination
+project that's wrapping up. A heavy LLM-judge framework would be expensive, slow, and itself
+need calibration — false confidence for little gain.
+
+**Decision.** A two-layer `evals/run.py`. (1) DETERMINISTIC checks (default, instant, no LLM):
+assert feasibility (season/time/budget+buffer), cost ordering (local<car, luxury>budget, more
+days cost more), and route sanity — the real regression guard for the parts that are pure code.
+(2) A small E2E layer (`--e2e`) runs a golden set through the full pipeline and checks the
+LLM-driven behaviour — focus honoured, exclude works, theme matching, day count — and reads the
+system's OWN faithfulness {checked, verified} instead of judging again. Prints a scorecard; exits
+non-zero on any failure.
+
+**Why.** Most of Roamio's correctness is deterministic, so it deserves cheap assertions, not an
+LLM grader. The only genuinely LLM-driven outputs (writer prose, faithfulness, tweak parsing) get
+a light E2E pass, and faithfulness reuses the guard's existing output so there's no second judge
+to calibrate. This is the honest amount of evaluation for the project's size — fast and free to
+run constantly, with the costly LLM layer opt-in.
+
+**Takeaway.** Match the eval to the system: assert the deterministic core directly, and for the
+LLM parts, prefer reading signals the system already produces over stacking another judge on top.
