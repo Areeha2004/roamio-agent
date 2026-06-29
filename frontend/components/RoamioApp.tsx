@@ -299,64 +299,81 @@ const photoQuery = (name: string) =>
     .toLowerCase();
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
+// Links point to real sections that exist on the landing page (no dead About/Blog pages).
+const NAV_LINKS = [
+  { label: "How it works", id: "how-it-works" },
+  { label: "Destinations", id: "destinations" },
+  { label: "Why Roamio", id: "why-roamio" },
+];
+
 function Navbar({
   onLogoClick,
   onPlanClick,
+  onNavigate,
   dark = false,
 }: {
   onLogoClick: () => void;
   onPlanClick: () => void;
+  onNavigate: (id: string) => void;
   dark?: boolean;
 }) {
+  // Stay transparent only while sitting over the hero photo; turn solid once scrolled
+  // (otherwise white nav text would vanish over the light sections below).
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const transparent = dark && !scrolled;
+
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={
-        dark
+        transparent
           ? { background: "transparent" }
-          : { background: "rgba(239,247,242,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border)" }
+          : { background: "rgba(239, 247, 242, 0.74)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border)" }
       }
     >
-      <div className="max-w-6xl mx-auto px-8 h-18 flex items-center justify-between" style={{ height: 72 }}>
+      <div className="max-w-6xl mx-auto px-8 flex items-center justify-between" style={{ height: 72 }}>
         <button onClick={onLogoClick} className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: P.aquamarine }}>
             <Compass size={15} style={{ color: P.carbonBlack }} />
           </div>
           <span
             className="text-lg font-bold tracking-tight"
-            style={{ fontFamily: "Sora, sans-serif", color: dark ? "#fff" : P.carbonBlack }}
+            style={{ fontFamily: "Sora, sans-serif", color: transparent ? "#fff" : P.carbonBlack }}
           >
             Roamio
           </span>
         </button>
 
         <div className="hidden md:flex items-center gap-8">
-          {["About", "Gallery", "Testimonials", "Blog"].map(l => (
+          {NAV_LINKS.map(l => (
             <button
-              key={l}
-              onClick={onLogoClick}
-              className="text-sm transition-colors"
-              style={{ color: dark ? "rgba(255,255,255,0.65)" : "var(--muted-foreground)" }}
+              key={l.id}
+              onClick={() => onNavigate(l.id)}
+              className="text-sm transition-opacity hover:opacity-70"
+              style={{ color: transparent ? "rgba(255,255,255,0.7)" : "var(--muted-foreground)" }}
             >
-              {l}
+              {l.label}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          
-          <button
-            onClick={onPlanClick}
-            className="text-sm font-semibold px-5 py-2.5 rounded-lg active:scale-95 transition-all duration-150 flex items-center gap-1.5"
-            style={{
-              background: dark ? P.aquamarine : P.fern,
-              color: dark ? P.carbonBlack : "#fff",
-              fontFamily: "Sora, sans-serif",
-            }}
-          >
-            Plan a Trip
-          </button>
-        </div>
+        <button
+          onClick={onPlanClick}
+          className="text-sm font-semibold px-5 py-2.5 rounded-lg active:scale-95 transition-all duration-150"
+          style={{
+            background: transparent ? P.aquamarine : P.fern,
+            color: transparent ? P.carbonBlack : "#fff",
+            fontFamily: "Sora, sans-serif",
+          }}
+        >
+          Plan a Trip
+        </button>
       </div>
     </nav>
   );
@@ -440,22 +457,14 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
                   Explore Now <ArrowRight size={16} />
                 </button>
 
-                {/* Social proof pill */}
+                {/* Trust pill — authentic facts, not fabricated metrics */}
                 <div
                   className="hidden md:flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
                   style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}
                 >
-                  <div className="flex -space-x-1.5">
-                    {["#2d6a4f", "#40916c", "#52b788", "#74c69d"].map((c, i) => (
-                      <div
-                        key={i}
-                        className="w-6 h-6 rounded-full border-2"
-                        style={{ background: c, borderColor: "rgba(255,255,255,0.3)" }}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-white/70">
-                    <span className="text-white font-semibold">2,400+</span> trips planned
+                  <Check size={14} style={{ color: P.aquamarine }} />
+                  <span className="text-xs text-white/75">
+                    <span className="text-white font-semibold">15+ destinations</span> · real routes, costs &amp; permits
                   </span>
                 </div>
               </div>
@@ -559,7 +568,7 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
       </section>
 
       {/* ── How it works ── */}
-      <section className="py-24 px-6 bg-background">
+      <section id="how-it-works" className="py-24 px-6 bg-background">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <span
@@ -589,8 +598,8 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
               {
                 step: "02",
                 icon: Sparkles,
-                title: "AI builds your itinerary",
-                desc: "Our AI synthesizes local knowledge — routes, permits, season warnings, hidden gems — into a structured day-by-day plan.",
+                title: "Roamio builds a grounded plan",
+                desc: "It picks destinations from a curated corpus, builds a real route, costs it, and checks season & permits — then writes it up day by day.",
                 bg: `${P.fern}18`,
                 iconColor: P.fern,
               },
@@ -633,7 +642,7 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
       </section>
 
       {/* ── Destinations ── */}
-      <section className="py-24 px-6" style={{ background: `${P.aquamarine}10` }}>
+      <section id="destinations" className="py-24 px-6" style={{ background: `${P.aquamarine}10` }}>
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
@@ -661,9 +670,9 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: "Hunza Valley", region: "Gilgit-Baltistan", img: "photo-1558618666-fcd25c85cd64", tag: "Most Loved", season: "Apr – Oct", days: "4–7 days" },
-              { name: "Skardu", region: "Gilgit-Baltistan", img: "photo-1586348943529-beaae6c28db9", tag: "Adventure Hub", season: "May – Sep", days: "3–5 days" },
-              { name: "Naran & Kaghan", region: "Khyber Pakhtunkhwa", img: "photo-1464822759023-fed622ff2c3b", tag: "Family Favourite", season: "Jun – Sep", days: "2–4 days" },
+              { name: "Hunza Valley", region: "Gilgit-Baltistan", img: "photo-1558618666-fcd25c85cd64", tag: "Blossom & forts", season: "Apr – Oct", days: "3–5 days" },
+              { name: "Skardu", region: "Gilgit-Baltistan", img: "photo-1586348943529-beaae6c28db9", tag: "Lakes & deserts", season: "Apr – Oct", days: "3–6 days" },
+              { name: "Naran & Kaghan", region: "Khyber Pakhtunkhwa", img: "photo-1464822759023-fed622ff2c3b", tag: "Lakes & passes", season: "May – Oct", days: "2–4 days" },
             ].map(({ name, region, img, tag, season, days }) => (
               <button
                 key={name}
@@ -702,6 +711,40 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
                   </div>
                 </div>
               </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why Roamio ── */}
+      <section id="why-roamio" className="py-24 px-6 bg-background">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <span className="text-xs font-bold tracking-[0.18em] uppercase mb-3 block" style={{ color: P.fern }}>
+              Why Roamio
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>
+              Grounded in real data,<br className="hidden md:block" /> not guessed by a chatbot
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed">
+              Every route, cost and permit comes from a curated corpus of Northern Pakistan. The AI only writes the words — the numbers and decisions are real.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Check, title: "Grounded picks", desc: "Destinations matched to your vibe from a hand-checked corpus — no made-up places." },
+              { icon: Navigation, title: "Real routes & costs", desc: "Drive times, transport, hotels and food computed from real ranges, with a clear breakdown." },
+              { icon: Sun, title: "Season & live checks", desc: "Seasonal access and permit notes built in, plus live road & weather conditions on top." },
+              { icon: Share2, title: "Tweak & share", desc: "Make it cheaper, add days or change the vibe instantly — then share a link to your plan." },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${P.aquamarine}25` }}>
+                  <Icon size={18} style={{ color: P.hunterGreen }} />
+                </div>
+                <h3 className="text-sm font-bold text-foreground mb-2" style={{ fontFamily: "Sora, sans-serif" }}>{title}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{desc}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -762,8 +805,8 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
             </div>
             <span className="text-sm font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Roamio</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            AI-powered Pakistan trip planning. Built with love for Pakistani travel.
+          <p className="text-xs text-muted-foreground text-center md:text-right">
+            AI-powered Pakistan trip planning · costs & times are estimates — verify prices and road conditions before booking.
           </p>
         </div>
       </footer>
@@ -1809,6 +1852,15 @@ export default function App() {
     return () => { if (loadingTimer.current) clearTimeout(loadingTimer.current); };
   }, []);
 
+  // Navbar links jump to real sections on the landing page. If we're on another page,
+  // switch to landing first, then scroll once it has rendered.
+  const goToSection = (id: string) => {
+    const scroll = () => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (page === "landing") { scroll(); return; }
+    setPage("landing");
+    setTimeout(scroll, 80);
+  };
+
   const isHeroPage = page === "landing";
 
   return (
@@ -1816,6 +1868,7 @@ export default function App() {
       <Navbar
         onLogoClick={() => setPage("landing")}
         onPlanClick={() => setPage("planner")}
+        onNavigate={goToSection}
         dark={isHeroPage}
       />
       {page === "landing"    && <LandingPage onPlanClick={() => setPage("planner")} />}
