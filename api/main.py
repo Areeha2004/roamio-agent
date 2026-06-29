@@ -40,6 +40,9 @@ _env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") i
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_env_origins or _DEFAULT_ORIGINS,
+    # Also allow any localhost / private-LAN origin in dev, so a phone on the same Wi-Fi
+    # hitting http://<LAN-IP>:3000 can reach the API. Never matches public hosts.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )

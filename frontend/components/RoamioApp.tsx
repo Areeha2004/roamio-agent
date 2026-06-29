@@ -156,9 +156,40 @@ const SAMPLE_TRIP = {
 };
 
 // ─── Backend wiring ───────────────────────────────────────────────────────────
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Default to the same host the page was served from (so a phone hitting the dev box
+// over http://<LAN-IP>:3000 reaches the backend at <LAN-IP>:8000, not its own
+// localhost). An explicit NEXT_PUBLIC_API_URL always wins.
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" ? `http://${window.location.hostname}:8000` : "http://localhost:8000");
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Copy text reliably — including insecure contexts (a phone on http://<LAN-IP>),
+// where navigator.clipboard is undefined. Falls back to a hidden-textarea execCommand.
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fall through to the legacy path */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 // Map the backend itinerary JSON (ITINERARY_SCHEMA) to the shape ItineraryPage renders.
 // Numbers/facts come straight from the API; a few display-only fields are derived.
@@ -326,13 +357,20 @@ const formatPKR = (n: number) => "PKR " + n.toLocaleString("en-PK");
 // Turn a formal destination name into a short, common photo-search query:
 // "Naran & Kaghan Valley" → "naran kaghan", "Murree & Galiyat" → "murree".
 // Drops the "&", generic words (valley/galiyat/region), and any "pakistan" suffix.
-const photoQuery = (name: string) =>
-  name
+// Some bare names are ambiguous on photo sites (e.g. "swat" → SWAT-team photos), so
+// they get an explicit, disambiguated query instead.
+const PHOTO_QUERY_OVERRIDES: Record<string, string> = {
+  swat: "swat valley pakistan",
+};
+const photoQuery = (name: string) => {
+  const q = name
     .replace(/&/g, " ")
     .replace(/\b(valley|valleys|galiyat|region|pakistan)\b/gi, "")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
+  return PHOTO_QUERY_OVERRIDES[q] ?? q;
+};
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 // Links point to real sections that exist on the landing page (no dead About/Blog pages).
@@ -1286,13 +1324,30 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
     let id = trip.shareId;
     if (!id && onShare) {
       setSharing(true);
-      id = (await onShare()) || "";
+      try { id = (await onShare()) || ""; } catch { id = ""; }
       setSharing(false);
     }
     const url = id ? `${window.location.origin}/trip/${id}` : window.location.href;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+
+    // On mobile, offer the native share sheet first (when the browser allows it).
+    const nav = typeof navigator !== "undefined" ? (navigator as Navigator & { share?: (d: ShareData) => Promise<void> }) : undefined;
+    if (nav?.share) {
+      try {
+        await nav.share({ title: trip.title, url });
+        return;
+      } catch (e) {
+        if ((e as { name?: string })?.name === "AbortError") return; // user dismissed the sheet
+        // otherwise fall through to clipboard
+      }
+    }
+
+    const ok = await copyText(url);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } else {
+      window.prompt("Copy your trip link:", url); // last resort if copy is blocked
+    }
   };
 
   return (
