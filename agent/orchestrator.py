@@ -81,6 +81,13 @@ def search_node(state: TripState) -> dict:
     pool = sorted(pool, key=rank)
 
     ranked = [c["id"] for c in pool]
+
+    # If the user picked a featured destination, anchor the trip on it: force it to the
+    # front of both the chosen stops and the pool so the plan is genuinely built around it.
+    prefer = req.get("prefer")
+    if prefer and prefer in _corpus:
+        ranked = [prefer] + [cid for cid in ranked if cid != prefer]
+
     n = min(len(ranked), 3, max(1, req["days"] // 3))
     return {"stops": ranked[:n], "pool": ranked, "transport": req.get("transport", "car"),
             "replan_count": 0, "replan_notes": []}
@@ -130,12 +137,25 @@ def replan_node(state: TripState) -> dict:
     def overlap(cid):
         return len({t.lower() for t in _corpus[cid]["tags"]} & requested)
 
-    farthest = route["ordered_stops"][-1]
+    # Never swap/drop the destination the user explicitly picked (a featured "focus").
+    prefer = req.get("prefer")
+    adjustable = [s for s in route["ordered_stops"] if s["id"] != prefer]
+    if not adjustable:
+        # Only the focused destination remains — keep it; be honest if it's over budget.
+        if over_budget and transport == "car":
+            n = route["ordered_stops"][-1]["name"]
+            if not any(n in m for m in notes):
+                notes.append(f"{n} is over your budget — raise the budget, shorten the trip, "
+                             f"or switch to local/public transport for a cheaper ride.")
+        return {"stops": stops, "replan_notes": notes, "replan_count": state["replan_count"] + 1}
+
+    farthest = adjustable[-1]
     reason = "budget" if over_budget else "the days available"
     # Cheaper, still-relevant alternatives: pick the BEST tag match first, then the closest,
     # so a low budget never collapses a 'glaciers & heritage' trip onto an unrelated cheap town.
     candidates = [cid for cid in state.get("pool", [])
-                  if cid not in stops and _hub_hours(cid) < _hub_hours(farthest["id"])
+                  if cid not in stops and cid != prefer
+                  and _hub_hours(cid) < _hub_hours(farthest["id"])
                   and (not requested or overlap(cid) > 0)]
     candidates.sort(key=lambda cid: (-overlap(cid), _hub_hours(cid)))
     cheaper = candidates[0] if candidates else None

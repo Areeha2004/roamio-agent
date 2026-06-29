@@ -24,6 +24,7 @@ interface PlanForm {
   month: number;
   stayStyle: "budget" | "standard" | "luxury";
   transport: "car" | "local";
+  focusDestination?: string;   // corpus id to anchor the trip on (from a featured pick)
 }
 
 // ─── Palette constants ────────────────────────────────────────────────────────
@@ -281,6 +282,40 @@ const TRANSPORT_MODES = [
 
 const INTERESTS = ["Lakes", "Trekking", "Waterfalls", "Forests", "Glaciers", "Desert", "Camping", "Culture", "Heritage", "Festivals", "Off-the-beaten-path", "Wildlife"];
 
+// Featured destinations — real corpus data & photos. Clicking one seeds the planner so
+// Roamio builds a trip CENTRED on that place (vibe + interests match its tags, so the
+// retrieval ranks it first), instead of dropping the user on a blank form.
+type Featured = {
+  id: string; name: string; region: string; season: string; days: string; highlight: string;
+  image: string; vibe: VibeType; interests: string[]; idealDays: number; budget: number;
+};
+const FEATURED: Featured[] = [
+  { id: "hunza-valley", name: "Hunza Valley", region: "Gilgit-Baltistan", season: "Apr – Oct", days: "5–6 days",
+    highlight: "Blossoms, ancient forts & the Karakoram",
+    image: "https://adventurertreks.pk/wp-content/uploads/2024/04/Best-Months-to-Visit-Hunza-Valley.webp",
+    vibe: "Photography", interests: ["Culture", "Heritage"], idealDays: 6, budget: 180000 },
+  { id: "skardu", name: "Skardu", region: "Gilgit-Baltistan", season: "Apr – Oct", days: "3–6 days",
+    highlight: "Alpine lakes & high-altitude cold deserts",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Shangrila_resort_skardu.jpg/1280px-Shangrila_resort_skardu.jpg",
+    vibe: "Adventure", interests: ["Lakes", "Trekking", "Desert"], idealDays: 6, budget: 190000 },
+  { id: "fairy-meadows", name: "Fairy Meadows", region: "Gilgit-Baltistan", season: "May – Oct", days: "3–4 days",
+    highlight: "Camp beneath Nanga Parbat, the Killer Mountain",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Nanga_Parbat_The_Killer_Mountain.jpg/1280px-Nanga_Parbat_The_Killer_Mountain.jpg",
+    vibe: "Adventure", interests: ["Trekking", "Camping"], idealDays: 4, budget: 140000 },
+  { id: "swat-valley", name: "Swat Valley", region: "Khyber Pakhtunkhwa", season: "Mar – Nov", days: "2–4 days",
+    highlight: "Green valleys, alpine lakes & waterfalls",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Mahodand_l.jpg/1280px-Mahodand_l.jpg",
+    vibe: "Chill", interests: ["Waterfalls", "Heritage", "Culture"], idealDays: 4, budget: 90000 },
+  { id: "naran-kaghan", name: "Naran & Kaghan", region: "Khyber Pakhtunkhwa", season: "May – Oct", days: "2–4 days",
+    highlight: "Saif-ul-Muluk lake & the Babusar Pass",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Siri_Paye%2C_Shogran%2C_Kaghan_Valley.jpg/1280px-Siri_Paye%2C_Shogran%2C_Kaghan_Valley.jpg",
+    vibe: "Adventure", interests: ["Lakes"], idealDays: 4, budget: 100000 },
+  { id: "kalash-valleys", name: "Kalash Valleys", region: "Khyber Pakhtunkhwa", season: "Apr – Oct", days: "3–5 days",
+    highlight: "Ancient Kalasha culture & living festivals",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Kalash_of_Birir_Valley_%28Coniferous_Forest%29%3B_Tahsin_Shah_01.jpg/1280px-Kalash_of_Birir_Valley_%28Coniferous_Forest%29%3B_Tahsin_Shah_01.jpg",
+    vibe: "Photography", interests: ["Culture", "Heritage", "Festivals"], idealDays: 5, budget: 150000 },
+];
+
 // ─── Utility ─────────────────────────────────────────────────────────────────
 const cn = (...classes: (string | boolean | undefined)[]) =>
   classes.filter(Boolean).join(" ");
@@ -380,7 +415,7 @@ function Navbar({
 }
 
 // ─── Landing Page ─────────────────────────────────────────────────────────────
-function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
+function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => void; onPickDestination: (d: Featured) => void }) {
   const [quickCity, setQuickCity] = useState("Islamabad");
   const [quickDays, setQuickDays] = useState(5);
   const [quickGroup, setQuickGroup] = useState("Friends");
@@ -650,63 +685,73 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
                 className="text-xs font-bold tracking-[0.18em] uppercase mb-3 block"
                 style={{ color: P.fern }}
               >
-                Dreaming of Pakistan
+                Featured destinations
               </span>
               <h2
                 className="text-3xl md:text-4xl font-bold text-foreground"
                 style={{ fontFamily: "Sora, sans-serif" }}
               >
-                Where do you want to go?
+                Start with a place that calls you
               </h2>
+              <p className="text-muted-foreground mt-3 max-w-lg leading-relaxed">
+                Pick one and Roamio builds a full trip around it — route, costs, season and permits. You can still tweak everything after.
+              </p>
             </div>
             <button
               onClick={onPlanClick}
               className="flex-shrink-0 text-sm font-semibold flex items-center gap-1.5 transition-colors"
               style={{ color: P.fern }}
             >
-              Plan any destination <ArrowRight size={15} />
+              Start from scratch <ArrowRight size={15} />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { name: "Hunza Valley", region: "Gilgit-Baltistan", img: "photo-1558618666-fcd25c85cd64", tag: "Blossom & forts", season: "Apr – Oct", days: "3–5 days" },
-              { name: "Skardu", region: "Gilgit-Baltistan", img: "photo-1586348943529-beaae6c28db9", tag: "Lakes & deserts", season: "Apr – Oct", days: "3–6 days" },
-              { name: "Naran & Kaghan", region: "Khyber Pakhtunkhwa", img: "photo-1464822759023-fed622ff2c3b", tag: "Lakes & passes", season: "May – Oct", days: "2–4 days" },
-            ].map(({ name, region, img, tag, season, days }) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURED.map((d) => (
               <button
-                key={name}
-                onClick={onPlanClick}
+                key={d.name}
+                onClick={() => onPickDestination(d)}
                 className="group text-left bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="relative h-52 overflow-hidden bg-muted">
                   <img
-                    src={`https://images.unsplash.com/${img}?w=600&h=400&fit=crop&auto=format`}
-                    alt={name}
+                    src={d.image}
+                    alt={d.name}
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
                   />
-                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(26,31,22,0.45) 0%, transparent 60%)" }} />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(26,31,22,0.78) 0%, rgba(26,31,22,0.1) 55%, transparent 80%)" }} />
+                  {/* Region chip + name overlaid on the photo for a more immersive card */}
                   <span
-                    className="absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide"
-                    style={{ background: P.aquamarine, color: P.carbonBlack }}
+                    className="absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide"
+                    style={{ background: "rgba(255,255,255,0.92)", color: P.carbonBlack }}
                   >
-                    {tag}
+                    {d.region}
                   </span>
-                </div>
-                <div className="p-5">
                   <h3
-                    className="text-base font-bold text-foreground mb-0.5"
+                    className="absolute bottom-3 left-4 right-4 text-lg font-bold text-white"
                     style={{ fontFamily: "Sora, sans-serif" }}
                   >
-                    {name}
+                    {d.name}
                   </h3>
-                  <p className="text-xs text-muted-foreground mb-3">{region}</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Sun size={12} style={{ color: P.amberHoney }} /> {season}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={12} style={{ color: P.fern }} /> {days}
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-foreground mb-3 leading-snug">{d.highlight}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Sun size={12} style={{ color: P.amberHoney }} /> {d.season}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} style={{ color: P.fern }} /> {d.days}
+                      </span>
+                    </div>
+                    <span
+                      className="text-xs font-semibold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ color: P.fern }}
+                    >
+                      Plan this <ArrowRight size={13} />
                     </span>
                   </div>
                 </div>
@@ -815,18 +860,20 @@ function LandingPage({ onPlanClick }: { onPlanClick: () => void }) {
 }
 
 // ─── Planner Page ─────────────────────────────────────────────────────────────
-function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
+type PlannerSeed = { days?: number; budget?: number; vibes?: VibeType[]; interests?: string[]; focusDestination?: string; featuredName?: string };
+function PlannerPage({ onSubmit, seed }: { onSubmit: (form: PlanForm) => void; seed?: PlannerSeed }) {
   const [form, setForm] = useState<PlanForm>({
-    days: 5,
-    budget: 75000,
+    days: seed?.days ?? 5,
+    budget: seed?.budget ?? 75000,
     startCity: "Islamabad",
     groupType: null,
-    vibes: [],
-    interests: [],
+    vibes: seed?.vibes ?? [],
+    interests: seed?.interests ?? [],
     exclude: [],
     month: 7,
     stayStyle: "standard",
     transport: "car",
+    focusDestination: seed?.focusDestination,
   });
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -861,6 +908,15 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
             Fill in a few details and Roamio builds you a full day-by-day itinerary in seconds.
           </p>
         </div>
+
+        {seed?.featuredName && (
+          <div className="mb-8 rounded-2xl p-4 flex items-start gap-3" style={{ background: `${P.aquamarine}1f`, border: `1px solid ${P.aquamarine}` }}>
+            <MapPin size={16} style={{ color: P.hunterGreen, flexShrink: 0, marginTop: 2 }} />
+            <p className="text-sm leading-relaxed" style={{ color: P.hunterGreen }}>
+              Building your trip around <span className="font-bold">{seed.featuredName}</span>. We’ve set a sensible length and vibe — adjust anything below, then generate.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* Days */}
@@ -1748,6 +1804,7 @@ export default function App() {
   const [page, setPage] = useState<Page>("landing");
   const [trip, setTrip] = useState<typeof SAMPLE_TRIP>(SAMPLE_TRIP);
   const [rawTrip, setRawTrip] = useState<any>(null);   // backend itinerary JSON, saved only on share
+  const [seed, setSeed] = useState<PlannerSeed | undefined>(undefined);  // featured-destination prefill
   const [lastForm, setLastForm] = useState<PlanForm | null>(null);
   const [status, setStatus] = useState("");
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1760,6 +1817,7 @@ export default function App() {
       days: form.days, budget: form.budget, startCity: form.startCity,
       groupType: form.groupType, month: form.month, stayStyle: form.stayStyle,
       transport: form.transport,
+      focus: form.focusDestination || "",
       vibe: form.vibes[0] || "Adventure",
       interests: [...form.vibes.slice(1).map(v => v.toLowerCase()), ...form.interests.map(i => i.toLowerCase())],
       exclude: form.exclude,
@@ -1810,6 +1868,11 @@ export default function App() {
     if (!lastForm) { setPage("planner"); return; }
     let form = applyTweak(lastForm, tweak);
     const t = tweak.toLowerCase();
+    // Any "change the place" tweak must release the anchored focus, or search would
+    // force the same destination straight back in.
+    if (/other place|somewhere else|different (place|destination|spot)|change (the )?(destination|place)|elsewhere|new place|remove|without|skip|exclude/.test(t)) {
+      form = { ...form, focusDestination: undefined };
+    }
     // "somewhere else" / "different place" → exclude the current destinations
     if (/other place|somewhere else|different (place|destination|spot)|change (the )?(destination|place)|elsewhere|new place/.test(t)) {
       form = { ...form, exclude: [...form.exclude, ...trip.destinationNames] };
@@ -1821,7 +1884,7 @@ export default function App() {
     trip.destinationNames.forEach((name) => {
       const first = name.split(/[\s&]+/)[0].toLowerCase();
       if (t.includes(name.toLowerCase()) || (first.length > 3 && t.includes(first))) {
-        form = { ...form, exclude: [...form.exclude, name] };
+        form = { ...form, exclude: [...form.exclude, name], focusDestination: undefined };
       }
     });
     runPlan(form);
@@ -1852,6 +1915,13 @@ export default function App() {
     return () => { if (loadingTimer.current) clearTimeout(loadingTimer.current); };
   }, []);
 
+  // A featured-destination click seeds the planner so the trip is built around that place.
+  const handlePickDestination = (d: Featured) => {
+    setSeed({ days: d.idealDays, budget: d.budget, vibes: [d.vibe], interests: d.interests,
+              focusDestination: d.id, featuredName: d.name });
+    setPage("planner");
+  };
+
   // Navbar links jump to real sections on the landing page. If we're on another page,
   // switch to landing first, then scroll once it has rendered.
   const goToSection = (id: string) => {
@@ -1867,12 +1937,12 @@ export default function App() {
     <div className="size-full" style={{ fontFamily: "Inter, sans-serif" }}>
       <Navbar
         onLogoClick={() => setPage("landing")}
-        onPlanClick={() => setPage("planner")}
+        onPlanClick={() => { setSeed(undefined); setPage("planner"); }}
         onNavigate={goToSection}
         dark={isHeroPage}
       />
-      {page === "landing"    && <LandingPage onPlanClick={() => setPage("planner")} />}
-      {page === "planner"    && <PlannerPage onSubmit={handlePlanSubmit} />}
+      {page === "landing"    && <LandingPage onPlanClick={() => { setSeed(undefined); setPage("planner"); }} onPickDestination={handlePickDestination} />}
+      {page === "planner"    && <PlannerPage onSubmit={handlePlanSubmit} seed={seed} />}
       {page === "loading"    && <LoadingPage status={status} />}
       {page === "itinerary"  && <ItineraryPage trip={trip} onTweak={handleTweak} onShare={handleShare} onNewTrip={() => setPage("planner")} />}
       {page === "error"      && <ErrorPage onRetry={() => setPage("planner")} />}
