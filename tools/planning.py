@@ -42,6 +42,9 @@ DRIVE_RATE_PKR_PER_HOUR = (1200, 2500)        # private car/jeep, per group, per
 BUS_FARE_PKR_PER_HOUR_PER_PERSON = 350        # local/public transport, per person, per drive-hour
 LOCAL_SLOWER_FACTOR = 1.2                     # buses + transfers run slower than a private car
 MAX_DRIVE_HOURS_PER_DAY = 8
+# A trip up to this much over budget is still offered (tagged "slightly over budget") rather
+# than swapped for something cheaper-but-irrelevant. Past it, the trip is truly over budget.
+BUDGET_BUFFER_PKR = 25000
 # Where each accommodation tier sits within a destination's cost range.
 STYLE_POS = {"budget": 0.0, "standard": 0.5, "luxury": 1.0}
 
@@ -221,18 +224,28 @@ def check_feasibility(route, cost, budget, days, month):
         problems.append(f"Trip needs ~{days_needed} days but only {days} available.")
         suggestions.append(f"Add ~{days_needed - days} days, or drop the farthest stop ({farthest}).")
 
-    # 3) BUDGET — does the estimated cost fit the budget?
+    # 3) BUDGET — does the estimated cost fit? We allow a small buffer so a trip that's a
+    #    little over (but a great match for the requested vibe) is still offered, tagged
+    #    "slightly over budget", instead of being swapped for something cheaper-but-irrelevant.
+    #    Only past the buffer is it treated as truly over budget (and re-planned).
     total = cost["total_pkr"]
-    if budget < total:
+    over_by = max(0, total - budget)
+    if total > budget + BUDGET_BUFFER_PKR:
         budget_status = "over_budget"
         problems.append(f"Estimated cost ~{total:,} PKR but budget is {budget:,} PKR.")
         suggestions.append("Drop a stop, shorten the trip, pick a cheaper stay tier, or raise the budget.")
+    elif total > budget:
+        budget_status = "slightly_over"
+        suggestions.append(
+            f"About {over_by:,} PKR over budget, but a strong match for what you picked. "
+            f"Tap 'Make it cheaper' for local transport or a closer base, or nudge your budget up."
+        )
     elif budget < total * 1.2:
         budget_status = "tight"
     else:
         budget_status = "comfortable"
 
-    feasible = not out_of_season and time_ok and budget >= total
+    feasible = not out_of_season and time_ok and total <= budget + BUDGET_BUFFER_PKR
 
     return {
         "feasible": feasible,
@@ -240,7 +253,7 @@ def check_feasibility(route, cost, budget, days, month):
         "season": {"out_of_season": [s["name"] for s in out_of_season]},
         "time": {"days_available": days, "days_needed": days_needed,
                  "drive_days": drive_days, "stop_days": stop_days, "ok": time_ok},
-        "budget": {"budget_pkr": budget, "trip_cost_pkr": total, "status": budget_status},
+        "budget": {"budget_pkr": budget, "trip_cost_pkr": total, "over_by_pkr": over_by, "status": budget_status},
         "problems": problems,
         "suggestions": suggestions,
     }

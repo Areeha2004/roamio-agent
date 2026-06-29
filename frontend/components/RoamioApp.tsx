@@ -50,6 +50,8 @@ const SAMPLE_TRIP = {
   food: 27000,
   localTransport: 18000,
   travel: 20000,
+  budgetStatus: "comfortable",
+  budgetOverBy: 0,
   stayStyle: "Standard",
   bestSeason: "May – September",
   currentSeasonWarning: "June is peak season — book accommodation 2–3 weeks in advance.",
@@ -179,6 +181,8 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     food: cb.food,
     localTransport: cb.local_transport,
     travel: cb.intercity_transport,
+    budgetStatus: api.summary.budget?.status || "comfortable",
+    budgetOverBy: api.summary.budget?.over_by_pkr || 0,
     stayStyle: cap(req.style || "standard"),
     // Season banner: when the dates are in season, show what's GOOD then (highlights);
     // only show the "avoid" note when the timing is actually off — never both.
@@ -1309,6 +1313,21 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
             ))}
           </div>
         </div>
+
+        {/* Slightly-over-budget notice — we kept the on-theme picks instead of swapping */}
+        {trip.budgetStatus === "slightly_over" && (
+          <div className="rounded-2xl p-4 mb-3 flex items-start gap-3" style={{ background: "#fff7ed", border: "1px solid #fdba74" }}>
+            <Wallet size={17} style={{ color: "#c2620c", flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <p className="text-sm font-semibold mb-0.5" style={{ color: "#9a3412" }}>
+                ≈ {formatPKR(trip.budgetOverBy)} over budget — but it matches your taste
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: "#b45309" }}>
+                We kept the destinations you chose. Tap “Make it cheaper” to trim to a cheaper, still-relevant plan, or nudge your budget up.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Route */}
         {trip.routeSummary && trip.routeSummary.legs.length > 0 && (

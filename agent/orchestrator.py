@@ -127,16 +127,18 @@ def replan_node(state: TripState) -> dict:
     # hill-station run. We also respect the user's transport choice: we don't silently
     # switch car → local here ('Make it cheaper' does that explicitly at their request).
     requested = {t.lower() for t in [req.get("vibe", ""), *req.get("interests", [])] if t}
-    def on_theme(cid):
-        return not requested or bool({t.lower() for t in _corpus[cid]["tags"]} & requested)
+    def overlap(cid):
+        return len({t.lower() for t in _corpus[cid]["tags"]} & requested)
 
     farthest = route["ordered_stops"][-1]
     reason = "budget" if over_budget else "the days available"
-    cheaper = next(
-        (cid for cid in sorted(state.get("pool", []), key=_hub_hours)
-         if cid not in stops and _hub_hours(cid) < _hub_hours(farthest["id"]) and on_theme(cid)),
-        None,
-    )
+    # Cheaper, still-relevant alternatives: pick the BEST tag match first, then the closest,
+    # so a low budget never collapses a 'glaciers & heritage' trip onto an unrelated cheap town.
+    candidates = [cid for cid in state.get("pool", [])
+                  if cid not in stops and _hub_hours(cid) < _hub_hours(farthest["id"])
+                  and (not requested or overlap(cid) > 0)]
+    candidates.sort(key=lambda cid: (-overlap(cid), _hub_hours(cid)))
+    cheaper = candidates[0] if candidates else None
 
     def note(msg):
         if msg not in notes:

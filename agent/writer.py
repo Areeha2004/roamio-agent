@@ -200,6 +200,11 @@ def write_itinerary(request, route, cost, feasibility):
             "total_cost_pkr": cost["total_pkr"],
             "total_drive_hours": route["est_round_trip_drive_hours"],
             "season": _season_summary(route),
+            "budget": {
+                "status": feasibility["budget"]["status"],
+                "over_by_pkr": feasibility["budget"].get("over_by_pkr", 0),
+                "budget_pkr": feasibility["budget"]["budget_pkr"],
+            },
             "headline": draft.headline,
         },
         "warnings": _build_warnings(route),
