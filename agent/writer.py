@@ -101,17 +101,19 @@ def _blend_sources(hits, k):
 
 
 def _grounding(request, route, per_stop_k=4, snippet_chars=600):
-    """Retrieve real source snippets for each stop and return (prompt_block, sources).
+    """Retrieve real source snippets for each stop and return (prompt_block, sources, by_stop).
 
     sources is the citation table the UI shows: [{ref, source, title, url, dest_id}].
+    by_stop maps stop_id -> [snippet texts], used later by the faithfulness check.
     Retrieval is scoped per destination, so a Hunza day only sees Hunza content.
     """
-    blocks, sources, n = [], [], 0
+    blocks, sources, by_stop, n = [], [], {}, 0
     for s in route["ordered_stops"]:
         d = _corpus[s["id"]]
         query = (f"{request.get('vibe', '')} trip — what to see, do and experience in "
                  f"{d['name']}: {', '.join(d['activities'][:6])}")
         hits = _blend_sources(search_content(s["id"], query, k=per_stop_k + 3), per_stop_k)
+        by_stop[s["id"]] = [h["text"] for h in hits]
         for h in hits:
             n += 1
             ref = f"S{n}"
@@ -120,14 +122,84 @@ def _grounding(request, route, per_stop_k=4, snippet_chars=600):
             snippet = " ".join(h["text"].split())[:snippet_chars]
             blocks.append(f"[{ref}] ({h['source']} — {h['title']}): {snippet}")
     if not blocks:
-        return "", []
+        return "", [], {}
     header = (
         "\nREAL SOURCE SNIPPETS — ground each stay day's notes in concrete detail drawn "
         "from these (specific sights, the feel of a place, practical colour). Prefer real "
         "specifics over generic filler, and never assert a named place or fact that isn't "
         "in a snippet or the activity list. List the refs you actually used in source_refs."
     )
-    return header + "\n" + "\n".join(blocks), sources
+    return header + "\n" + "\n".join(blocks), sources, by_stop
+
+
+# ---- Faithfulness guard: an LLM judge checks day notes against the retrieved snippets ----
+_judge = ChatOpenAI(model="gpt-4o-mini", temperature=0)  # deterministic verification
+
+
+class _DayVerdict(BaseModel):
+    day: int = Field(description="The day number being judged")
+    supported: bool = Field(description="True only if EVERY specific named claim in the note is supported by that day's snippets")
+    corrected_note: str = Field(description="The note with any UNSUPPORTED specific claim removed or softened to generic wording; identical to the original if fully supported")
+
+
+class _FaithfulnessReport(BaseModel):
+    verdicts: list[_DayVerdict]
+
+
+_VERIFY_SYSTEM = (
+    "You are a fact-checker for a travel itinerary. For each day below, decide whether every "
+    "SPECIFIC, NAMED claim in the note — named places, ages ('1000-year-old'), superlatives "
+    "('highest in the world'), distances/heights — is supported. A claim is SUPPORTED if it "
+    "appears in that day's source snippets OR in its 'Known real places' list (both are "
+    "trusted). Generic travel phrasing ('a scenic drive', 'relax by the river', 'local food') "
+    "needs no support and is always fine. Only flag a claim that is both absent from the "
+    "snippets AND the known-places list, or that states a specific fact (an age, a superlative, "
+    "a distance) contradicted by or missing from the snippets. If a claim fails, set "
+    "supported=false and return corrected_note with that claim removed or softened to generic "
+    "wording, preserving the warm tone and length. Otherwise set supported=true and return the "
+    "note unchanged."
+)
+
+
+def _verify_faithfulness(days, grounding_by_stop):
+    """Check each stay day's note against its snippets + the stop's known corpus landmarks;
+    soften unsupported specifics and tag each day with `verified`. Resilient: on any judge
+    failure, leave notes as-is (verified=None). Returns (days, {'checked', 'verified'})."""
+    targets = [d for d in days
+               if d["type"] == "stay" and d.get("stop_id") and d.get("notes")
+               and grounding_by_stop.get(d["stop_id"])]
+    if not targets:
+        return days, {"checked": 0, "verified": 0}
+
+    blocks = []
+    for d in targets:
+        snips = "\n".join(f"- {t[:500]}" for t in grounding_by_stop[d["stop_id"]])
+        known = ", ".join(_corpus.get(d["stop_id"], {}).get("activities", []))
+        blocks.append(
+            f'Day {d["day"]} note: "{d["notes"]}"\n'
+            f'Known real places at this stop: {known}\n'
+            f'Source snippets for Day {d["day"]}:\n{snips}')
+    try:
+        report = _judge.with_structured_output(_FaithfulnessReport).invoke(
+            _VERIFY_SYSTEM + "\n\n" + "\n\n".join(blocks))
+        by_day = {v.day: v for v in report.verdicts}
+    except Exception:
+        by_day = {}
+
+    verified = 0
+    for d in days:
+        if d["type"] != "stay" or d not in targets:
+            continue
+        v = by_day.get(d["day"])
+        if v is None:
+            d["verified"] = None          # judge didn't return a verdict for this day
+            continue
+        d["verified"] = bool(v.supported)
+        if not v.supported and v.corrected_note.strip():
+            d["notes"] = v.corrected_note.strip()
+        if d["verified"]:
+            verified += 1
+    return days, {"checked": len(targets), "verified": verified}
 
 
 _SYSTEM = (
@@ -216,7 +288,7 @@ def write_itinerary(request, route, cost, feasibility):
 
     # 1) LLM writes prose + day layout, constrained by the grounded brief AND grounded in
     #    real retrieved source snippets (Wikivoyage / Wikipedia / web) it must cite.
-    grounding_block, sources = _grounding(request, route)
+    grounding_block, sources, grounding_by_stop = _grounding(request, route)
     valid_refs = {s["ref"] for s in sources}
     writer = _chat.with_structured_output(ItineraryDraft)
     draft = writer.invoke(f"{_SYSTEM}\n\n{_trip_facts(request, route)}\n{grounding_block}")
@@ -241,7 +313,12 @@ def write_itinerary(request, route, cost, feasibility):
             # Keep only refs that actually exist in this trip's source table.
             "source_refs": [r for r in (d.source_refs or []) if r in valid_refs] if is_stay else [],
             "notes": d.notes,
+            "verified": None,   # set by the faithfulness guard below
         })
+
+    # 2b) Faithfulness guard — an LLM judge checks each stay day's specific claims against
+    #     its snippets, softening anything unsupported and tagging the day's `verified` flag.
+    days, faithfulness = _verify_faithfulness(days, grounding_by_stop)
 
     # 3) Inject the trustworthy numbers/facts from the tools + corpus.
     primary = route["ordered_stops"][-1]["id"] if route["ordered_stops"] else None
@@ -265,6 +342,7 @@ def write_itinerary(request, route, cost, feasibility):
                 "budget_pkr": feasibility["budget"]["budget_pkr"],
             },
             "headline": draft.headline,
+            "faithfulness": faithfulness,   # {checked, verified} — day notes fact-checked vs sources
         },
         "warnings": _build_warnings(route),
         "route_summary": _build_route_summary(route, cost),
