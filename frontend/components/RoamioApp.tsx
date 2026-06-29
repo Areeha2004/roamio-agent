@@ -452,14 +452,14 @@ function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => vo
         <div className="relative h-full flex flex-col justify-between">
           {/* Upper text block (no bottom spacer on mobile — the search bar is desktop-only) */}
           <div className="flex items-center flex-1 pb-0 md:pb-36">
-            <div className="max-w-6xl mx-auto px-8 w-full pt-20">
+            <div className="max-w-6xl mx-auto px-6 sm:px-8 w-full pt-24 md:pt-20">
               <div
-                className="inline-flex items-center gap-2 border rounded-full px-4 py-1.5 mb-7"
+                className="inline-flex items-center gap-2 border rounded-full px-3.5 py-1.5 mb-5 sm:mb-7"
                 style={{ borderColor: `${P.aquamarine}40`, background: `${P.aquamarine}14` }}
               >
                 <Leaf size={12} style={{ color: P.aquamarine }} />
                 <span
-                  className="text-xs font-semibold tracking-[0.16em] uppercase"
+                  className="text-[10px] sm:text-xs font-semibold tracking-[0.16em] uppercase"
                   style={{ color: P.aquamarine }}
                 >
                   AI-Powered Pakistan Travel
@@ -467,22 +467,21 @@ function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => vo
               </div>
 
               <h1
-                className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5 max-w-2xl"
+                className="text-[2.75rem] leading-[1.05] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight mb-4 sm:mb-5 max-w-2xl"
                 style={{ fontFamily: "Sora, sans-serif" }}
               >
                 Wander Pakistan.<br />
-                <span style={{ color: P.aquamarine }}>Beyond</span><br />
-                Boundaries.
+                <span style={{ color: P.aquamarine }}>Beyond</span> Boundaries.
               </h1>
 
-              <p className="text-white/65 text-lg leading-relaxed max-w-md mb-8">
+              <p className="text-white/70 text-base sm:text-lg leading-relaxed max-w-md mb-7 sm:mb-8">
                 Tell Roamio your days, budget and vibe — get a full day-by-day Pakistan trip plan in seconds.
               </p>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 max-w-md sm:max-w-none">
                 <button
                   onClick={onPlanClick}
-                  className="inline-flex items-center gap-2.5 font-bold text-sm px-7 py-3.5 rounded-xl active:scale-95 transition-all duration-150"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 font-bold text-sm px-7 py-4 sm:py-3.5 rounded-xl active:scale-95 transition-all duration-150"
                   style={{
                     background: P.aquamarine,
                     color: P.carbonBlack,
@@ -490,25 +489,26 @@ function LandingPage({ onPlanClick, onPickDestination }: { onPlanClick: () => vo
                     boxShadow: `0 8px 28px ${P.aquamarine}35`,
                   }}
                 >
-                  Explore Now <ArrowRight size={16} />
+                  Plan My Trip <ArrowRight size={16} />
                 </button>
 
-                {/* Trust pill — authentic facts, not fabricated metrics */}
+                {/* Trust line — authentic facts, shown on mobile too */}
                 <div
-                  className="hidden md:flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
+                  className="flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl"
                   style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}
                 >
-                  <Check size={14} style={{ color: P.aquamarine }} />
+                  <Check size={14} style={{ color: P.aquamarine, flexShrink: 0 }} />
                   <span className="text-xs text-white/75">
-                    <span className="text-white font-semibold">15+ destinations</span> · real routes, costs &amp; permits
+                    <span className="text-white font-semibold">15+ destinations</span> · real routes &amp; permits
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ── Bottom quick-search bar ── */}
-          <div className="absolute bottom-0 left-0 right-0 px-8 pb-0">
+          {/* ── Bottom quick-search bar (desktop only; on mobile the hero uses the
+              full-width "Plan My Trip" button instead, to keep it light and uncluttered) ── */}
+          <div className="hidden md:block absolute bottom-0 left-0 right-0 px-8 pb-0">
             <div className="max-w-5xl mx-auto">
               <div
                 className="rounded-t-2xl overflow-hidden"
