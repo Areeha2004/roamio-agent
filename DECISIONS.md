@@ -324,3 +324,30 @@ don't dominate the citations.
 **Takeaway.** When a feature forces a disproportionate architecture change for thin payoff,
 the right move can be to *narrow scope* and reinvest the effort in the part that actually
 makes the product better — here, turning a templated writer into a grounded, cited one.
+
+---
+
+## 013 · Faithfulness guard — soften, don't block; trust the corpus too
+**Date:** 2026-06-29 (post-v0) · **Area:** RAG / trust / LLM-as-judge
+
+**Challenge.** The grounded writer can still drift — assert an age, a superlative ("highest
+in the world"), or a place that isn't actually in its sources. We wanted a verification
+layer without making trips fail or stripping legitimate, corpus-validated landmarks.
+
+**Decision.** A second LLM (temp 0) acts as a **fact-checker** after the writer: for each
+stay day it checks every specific named claim against that day's retrieved snippets **and**
+the stop's corpus activity list (both are trusted ground truth). Unsupported specifics are
+**softened to generic wording** (not deleted, not blocked); each day gets a `verified` flag
+and the trip a `{checked, verified}` summary, surfaced as a per-day "Fact-checked" chip and
+a "N days fact-checked against sources" badge. The check is resilient — any judge failure
+leaves notes untouched (`verified=None`), never breaking a trip.
+
+**Why.** Checking only the retrieved snippets over-flagged real landmarks (Baltit/Altit
+Forts are in the corpus but weren't in the top-k chunks), so the corpus activity list had to
+count as support. Softening beats blocking: the traveller still gets a warm, complete note,
+just without the unverifiable claim. It turns the grounding from "cites sources" into "cites
+sources AND verifies against them" — the trust story the UI can now show.
+
+**Takeaway.** An LLM-as-judge is most useful when it *repairs* rather than *rejects*, and
+when "ground truth" includes every trusted source you have — not just the one pipeline that
+happened to retrieve this turn.
