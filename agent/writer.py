@@ -30,6 +30,10 @@ from langchain_openai import ChatOpenAI
 ROOT = Path(__file__).parent.parent
 _corpus = {d["id"]: d for d in json.loads((ROOT / "corpus" / "corpus.json").read_text(encoding="utf-8"))}
 
+# Real-content retriever (Wikivoyage + Wikipedia + Tavily), for grounding the prose.
+sys.path.insert(0, str(ROOT / "rag"))
+from content import search_content
+
 # slight warmth for readable prose; structure stays reliable at low temp
 _chat = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
 
@@ -44,7 +48,8 @@ class DayPlan(BaseModel):
     drive_hours: float = Field(0, description="Approximate driving hours this day (0 on stay days)")
     stop_id: Optional[str] = Field(None, description="Corpus id of the destination on a stay day, else null")
     activities: list[str] = Field(default_factory=list, description="Activities for a stay day — ONLY from the provided list for that stop")
-    notes: str = Field(description="One or two friendly sentences about the day")
+    notes: str = Field(description="One or two friendly sentences about the day, grounded in the real source snippets where possible")
+    source_refs: list[str] = Field(default_factory=list, description="Refs of the source snippets you used for this day's notes, e.g. ['S1','S3']; [] if none")
 
 
 class ItineraryDraft(BaseModel):
@@ -74,6 +79,55 @@ def _trip_facts(request, route):
             f"activities = {d['activities']}"
         )
     return "\n".join(lines)
+
+
+def _blend_sources(hits, k):
+    """Keep retrieval relevant, but guarantee the authoritative sources (Wikivoyage, then
+    Wikipedia) are represented and not drowned out by web listicles. `hits` is already
+    sorted by relevance."""
+    if len(hits) <= k:
+        return hits
+    chosen, used = [], set()
+    for src in ("wikivoyage", "wikipedia"):
+        for i, h in enumerate(hits):
+            if i not in used and h["source"] == src:
+                chosen.append(h); used.add(i); break
+    for i, h in enumerate(hits):           # fill remaining slots by relevance
+        if len(chosen) >= k:
+            break
+        if i not in used:
+            chosen.append(h); used.add(i)
+    return chosen[:k]
+
+
+def _grounding(request, route, per_stop_k=4, snippet_chars=600):
+    """Retrieve real source snippets for each stop and return (prompt_block, sources).
+
+    sources is the citation table the UI shows: [{ref, source, title, url, dest_id}].
+    Retrieval is scoped per destination, so a Hunza day only sees Hunza content.
+    """
+    blocks, sources, n = [], [], 0
+    for s in route["ordered_stops"]:
+        d = _corpus[s["id"]]
+        query = (f"{request.get('vibe', '')} trip — what to see, do and experience in "
+                 f"{d['name']}: {', '.join(d['activities'][:6])}")
+        hits = _blend_sources(search_content(s["id"], query, k=per_stop_k + 3), per_stop_k)
+        for h in hits:
+            n += 1
+            ref = f"S{n}"
+            sources.append({"ref": ref, "source": h["source"], "title": h["title"],
+                            "url": h["url"], "dest_id": s["id"]})
+            snippet = " ".join(h["text"].split())[:snippet_chars]
+            blocks.append(f"[{ref}] ({h['source']} — {h['title']}): {snippet}")
+    if not blocks:
+        return "", []
+    header = (
+        "\nREAL SOURCE SNIPPETS — ground each stay day's notes in concrete detail drawn "
+        "from these (specific sights, the feel of a place, practical colour). Prefer real "
+        "specifics over generic filler, and never assert a named place or fact that isn't "
+        "in a snippet or the activity list. List the refs you actually used in source_refs."
+    )
+    return header + "\n" + "\n".join(blocks), sources
 
 
 _SYSTEM = (
@@ -160,9 +214,12 @@ def write_itinerary(request, route, cost, feasibility):
     if "error" in route or "error" in cost:
         return {"error": "cannot write an itinerary from an invalid plan"}
 
-    # 1) LLM writes prose + day layout, constrained by the grounded brief.
+    # 1) LLM writes prose + day layout, constrained by the grounded brief AND grounded in
+    #    real retrieved source snippets (Wikivoyage / Wikipedia / web) it must cite.
+    grounding_block, sources = _grounding(request, route)
+    valid_refs = {s["ref"] for s in sources}
     writer = _chat.with_structured_output(ItineraryDraft)
-    draft = writer.invoke(f"{_SYSTEM}\n\n{_trip_facts(request, route)}")
+    draft = writer.invoke(f"{_SYSTEM}\n\n{_trip_facts(request, route)}\n{grounding_block}")
 
     # 2) Assemble days, validating the parts that must stay grounded.
     days = []
@@ -181,6 +238,8 @@ def write_itinerary(request, route, cost, feasibility):
             # We no longer drop non-corpus items, so days feel full; the prompt forbids
             # inventing NAMED places. Trust-critical data (costs/permits/route) stays grounded.
             "activities": d.activities if is_stay else [],
+            # Keep only refs that actually exist in this trip's source table.
+            "source_refs": [r for r in (d.source_refs or []) if r in valid_refs] if is_stay else [],
             "notes": d.notes,
         })
 
@@ -210,6 +269,7 @@ def write_itinerary(request, route, cost, feasibility):
         "warnings": _build_warnings(route),
         "route_summary": _build_route_summary(route, cost),
         "tips": _build_tips(route),
+        "sources": sources,   # citation table: each {ref, source, title, url, dest_id}
         "days": days,
         "cost_breakdown_pkr": {**cost["breakdown_pkr"], "total": cost["total_pkr"]},
         "meta": {
