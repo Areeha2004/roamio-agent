@@ -128,14 +128,19 @@ def _build_tips(route):
     return tips
 
 
-def _build_route_summary(route):
-    """Grounded route legs (from / to / hours / via) + total round-trip hours."""
+def _build_route_summary(route, cost):
+    """Grounded route legs (from / to / hours / via) + one-way and round-trip hours,
+    the chosen transport mode, and both transport options (car vs local) so the UI can
+    show 'via locals: X hrs / Y PKR' next to 'private car: …' before any tweak."""
     return {
         "legs": [
             {"from": l["from"], "to": l["to"], "hours": l["hours"], "via": l.get("via", "")}
             for l in route.get("legs", [])
         ],
+        "one_way_hours": cost.get("one_way_drive_hours", round(route["est_round_trip_drive_hours"] / 2, 1)),
         "round_trip_hours": route["est_round_trip_drive_hours"],
+        "transport": cost.get("transport", "car"),
+        "transport_options": cost.get("transport_options", {}),
     }
 
 
@@ -186,7 +191,7 @@ def write_itinerary(request, route, cost, feasibility):
             "headline": draft.headline,
         },
         "warnings": _build_warnings(route),
-        "route_summary": _build_route_summary(route),
+        "route_summary": _build_route_summary(route, cost),
         "tips": _build_tips(route),
         "days": days,
         "cost_breakdown_pkr": {**cost["breakdown_pkr"], "total": cost["total_pkr"]},

@@ -54,6 +54,7 @@ class PlanRequest(BaseModel):
     vibe: str                            # primary vibe (drives the title)
     month: int = Field(ge=1, le=12)
     stayStyle: str = "standard"          # budget | standard | luxury (optional)
+    transport: str = "car"               # car (private) | local (public/bus)
     interests: list[str] = []            # extra vibes/goals that enrich the search
     exclude: list[str] = []              # destination names/ids to avoid ("somewhere else")
 
@@ -73,6 +74,7 @@ def _to_request(req: PlanRequest) -> dict:
         "vibe": req.vibe,
         "month": req.month,
         "style": (req.stayStyle or "standard").lower(),
+        "transport": (req.transport or "car").lower(),
         "interests": [i.strip() for i in (req.interests or [])],
         "exclude": [e.strip() for e in (req.exclude or [])],
     }

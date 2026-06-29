@@ -49,6 +49,8 @@ class TripState(TypedDict):
     itinerary: Optional[dict]
     replan_count: int
     replan_notes: list
+    transport: str
+    pool: list
 
 
 # ── Nodes (each reads the state, returns the keys it updates) ─────────────────
@@ -78,35 +80,64 @@ def search_node(state: TripState) -> dict:
         return (-len(tags & requested), c["distance"])
     pool = sorted(pool, key=rank)
 
-    n = min(len(pool), 3, max(1, req["days"] // 3))
-    return {"stops": [c["id"] for c in pool[:n]], "replan_count": 0, "replan_notes": []}
+    ranked = [c["id"] for c in pool]
+    n = min(len(ranked), 3, max(1, req["days"] // 3))
+    return {"stops": ranked[:n], "pool": ranked, "transport": req.get("transport", "car"),
+            "replan_count": 0, "replan_notes": []}
 
 
 def plan_node(state: TripState) -> dict:
-    """ROUTE → COST → FEASIBILITY for the current set of stops."""
+    """ROUTE → COST → FEASIBILITY for the current set of stops & transport mode."""
     req = state["request"]
     route = build_route(state["stops"], req["start_city"])
-    cost = estimate_cost(route, req["group_type"], req["days"], req.get("style", "standard"))
+    cost = estimate_cost(route, req["group_type"], req["days"], req.get("style", "standard"),
+                         state.get("transport", "car"))
     feas = check_feasibility(route, cost, req["budget_pkr"], req["days"], req["month"])
     return {"route": route, "cost": cost, "feasibility": feas}
 
 
+def _hub_hours(cid):
+    """Drive hours from the Islamabad hub — a proxy for how 'far/expensive' a stop is."""
+    return _corpus[cid]["drive_times"]["from_islamabad"]["max_hours"]
+
+
 def replan_node(state: TripState) -> dict:
-    """RE-PLAN: drop an out-of-season or the farthest stop, recording why."""
+    """RE-PLAN. out-of-season → drop. Over budget → first switch to cheaper transport,
+    then SWAP the priciest stop for a closer/cheaper one (e.g. Skardu → Murree); too
+    rushed → swap or drop the farthest."""
     req = state["request"]
     route, feas = state["route"], state["feasibility"]
     stops = list(state["stops"])
     notes = list(state["replan_notes"])
+    transport = state.get("transport", "car")
     month_name = MONTHS[req["month"]]
     name_to_id = {s["name"]: s["id"] for s in route["ordered_stops"]}
+
     out = feas["season"]["out_of_season"]
     if out:
         drop = [name_to_id[n] for n in out if n in name_to_id]
         stops = [s for s in stops if s not in drop]
         notes.append(f"Removed {', '.join(out)} — closed in {month_name}.")
-    else:
-        farthest = route["ordered_stops"][-1]
-        reason = "budget" if feas["budget"]["status"] == "over_budget" else "the days available"
+        return {"stops": stops, "replan_notes": notes, "replan_count": state["replan_count"] + 1}
+
+    over_budget = feas["budget"]["status"] == "over_budget"
+    # 1) cheaper transport first — keep the destination
+    if over_budget and transport == "car":
+        notes.append("Switched to local/public transport to lower the cost.")
+        return {"transport": "local", "replan_notes": notes, "replan_count": state["replan_count"] + 1}
+
+    # 2) swap the farthest (priciest) stop for a closer/cheaper one from the candidate pool
+    farthest = route["ordered_stops"][-1]
+    reason = "budget" if over_budget else "the days available"
+    cheaper = next(
+        (cid for cid in sorted(state.get("pool", []), key=_hub_hours)
+         if cid not in stops and _hub_hours(cid) < _hub_hours(farthest["id"])),
+        None,
+    )
+    if cheaper:
+        stops = [cheaper if s == farthest["id"] else s for s in stops]
+        notes.append(f"Swapped {farthest['name']} for {_corpus[cheaper]['name']} to fit {reason}.")
+    elif len(stops) > 1:
         stops = [s for s in stops if s != farthest["id"]]
         notes.append(f"Dropped {farthest['name']} to fit {reason}.")
     return {"stops": stops, "replan_notes": notes, "replan_count": state["replan_count"] + 1}
@@ -163,8 +194,8 @@ def decide(state: TripState) -> str:
     feas = state["feasibility"]
     if feas.get("feasible"):
         return "conditions"
-    if len(state["stops"]) <= 1 or state["replan_count"] >= MAX_REPLANS:
-        return "conditions"  # best-effort: nothing left to drop
+    if state["replan_count"] >= MAX_REPLANS:
+        return "conditions"  # best-effort: out of moves (transport/swap/drop tried)
     return "replan"
 
 

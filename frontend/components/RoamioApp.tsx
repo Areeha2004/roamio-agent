@@ -23,6 +23,7 @@ interface PlanForm {
   exclude: string[];
   month: number;
   stayStyle: "budget" | "standard" | "luxury";
+  transport: "car" | "local";
 }
 
 // ─── Palette constants ────────────────────────────────────────────────────────
@@ -48,7 +49,7 @@ const SAMPLE_TRIP = {
   accommodation: 47500,
   food: 27000,
   localTransport: 18000,
-  fuel: 20000,
+  travel: 20000,
   stayStyle: "Standard",
   bestSeason: "May – September",
   currentSeasonWarning: "June is peak season — book accommodation 2–3 weeks in advance.",
@@ -63,7 +64,13 @@ const SAMPLE_TRIP = {
       { from: "Islamabad", to: "Naran", hours: 9, via: "via Mansehra & Balakot" },
       { from: "Naran", to: "Hunza", hours: 8, via: "via Babusar Pass & the KKH" },
     ],
+    oneWayHours: 18,
     roundTripHours: 36,
+    transport: "car" as "car" | "local",
+    transportOptions: {
+      car: { label: "Private car", cost: 20000, one_way_hours: 18, round_trip_hours: 36 },
+      local: { label: "Local / public", cost: 14000, one_way_hours: 21.6, round_trip_hours: 43.2 },
+    } as Record<string, { label: string; cost: number; one_way_hours: number; round_trip_hours: number }>,
   },
   tips: ["Carry cash — ATMs are scarce up north", "Book stays ahead in peak season", "Pack warm layers even in summer"],
   days_data: [
@@ -171,7 +178,7 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     accommodation: cb.hotels,
     food: cb.food,
     localTransport: cb.local_transport,
-    fuel: cb.fuel,
+    travel: cb.intercity_transport,
     stayStyle: cap(req.style || "standard"),
     bestSeason: api.summary.feasible ? "In season for your dates" : "Check seasonal access",
     currentSeasonWarning: (warn("season")?.text || warn("info")?.text || ""),
@@ -183,7 +190,10 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     destinationNames: api.summary.destination_names || [],
     routeSummary: {
       legs: (api.route_summary?.legs || []).map((l: any) => ({ from: l.from, to: l.to, hours: l.hours, via: l.via })),
+      oneWayHours: api.route_summary?.one_way_hours || Math.round((api.route_summary?.round_trip_hours || 0) / 2),
       roundTripHours: api.route_summary?.round_trip_hours || 0,
+      transport: (api.route_summary?.transport || "car") as "car" | "local",
+      transportOptions: (api.route_summary?.transport_options || {}) as Record<string, { label: string; cost: number; one_way_hours: number; round_trip_hours: number }>,
     },
     tips: api.tips || [],
     days_data: api.days.map((d: any) => ({
@@ -211,8 +221,15 @@ function applyTweak(form: PlanForm, tweak: string): PlanForm {
   const sub = t.match(/(?:-|remove\s*|fewer\s*)(\d+)\s*day/);
   if (sub) f.days = Math.max(1, f.days - parseInt(sub[1]));
   else if (/shorter|fewer days/.test(t)) f.days = Math.max(1, f.days - 2);
-  if (/cheaper|lower budget|less expensive|reduce budget/.test(t)) f.budget = Math.max(10000, Math.round(f.budget * 0.8));
-  if (/luxur|premium|higher budget|more comfort/.test(t)) f.budget = Math.round(f.budget * 1.3);
+  if (/cheaper|lower budget|less expensive|reduce budget/.test(t)) {
+    // First lever for "cheaper": ride local/public instead of a private car. Only if
+    // we're already on local do we trim the budget (which may swap the destination).
+    if (f.transport === "car") f.transport = "local";
+    else f.budget = Math.max(10000, Math.round(f.budget * 0.8));
+  }
+  if (/luxur|premium|higher budget|more comfort/.test(t)) { f.transport = "car"; f.budget = Math.round(f.budget * 1.3); }
+  if (/local|public transport|by bus|take the bus/.test(t)) f.transport = "local";
+  if (/private car|own car|rent(ed)? car|by car/.test(t)) f.transport = "car";
   if (/photograph/.test(t)) f.vibes = ["Photography"];
   if (/adventur/.test(t)) f.vibes = ["Adventure"];
   if (/chill|relax/.test(t)) f.vibes = ["Chill"];
@@ -301,12 +318,7 @@ function Navbar({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            className="hidden md:block text-sm font-medium transition-colors"
-            style={{ color: dark ? "rgba(255,255,255,0.75)" : P.fern }}
-          >
-            Sign in
-          </button>
+          
           <button
             onClick={onPlanClick}
             className="text-sm font-semibold px-5 py-2.5 rounded-lg active:scale-95 transition-all duration-150 flex items-center gap-1.5"
@@ -745,6 +757,7 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
     exclude: [],
     month: 7,
     stayStyle: "standard",
+    transport: "car",
   });
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -1231,7 +1244,7 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
               { label: "Hotels", value: trip.accommodation, icon: Tent },
               { label: "Food", value: trip.food, icon: Coffee },
               { label: "Local", value: trip.localTransport, icon: Navigation },
-              { label: "Fuel", value: trip.fuel, icon: Fuel },
+              { label: "Travel", value: trip.travel, icon: Fuel },
             ].map(({ label, value, icon: Icon }) => (
               <div key={label} className="text-center">
                 <Icon size={13} className="mx-auto mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }} />
@@ -1250,7 +1263,7 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
             <div className="flex items-center gap-2 mb-3">
               <Navigation size={15} style={{ color: P.fern }} />
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Route · ~{trip.routeSummary.roundTripHours}h round trip
+                Route · ~{trip.routeSummary.oneWayHours}h one way
               </span>
             </div>
             <div className="space-y-1.5">
@@ -1261,6 +1274,38 @@ export function ItineraryPage({ trip, onTweak, onNewTrip }: { trip: typeof SAMPL
                 </div>
               ))}
             </div>
+            {/* Transport comparison — car vs local, upfront, so you can choose before tweaking */}
+            {trip.routeSummary.transportOptions && Object.keys(trip.routeSummary.transportOptions).length > 0 && (
+              <div className="grid grid-cols-2 gap-2.5 mt-4 pt-3" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                {(["car", "local"] as const).map((mode) => {
+                  const o = trip.routeSummary.transportOptions[mode];
+                  if (!o) return null;
+                  const active = trip.routeSummary.transport === mode;
+                  return (
+                    <div
+                      key={mode}
+                      className="rounded-xl px-3 py-2.5"
+                      style={{
+                        background: active ? `${P.fern}18` : "transparent",
+                        border: `1px solid ${active ? P.fern : "rgba(0,0,0,0.08)"}`,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{o.label}</span>
+                        {active && <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ background: P.fern, color: "#fff" }}>Chosen</span>}
+                      </div>
+                      <div className="text-sm font-bold text-foreground" style={{ fontFamily: "DM Mono, monospace" }}>{formatPKR(o.cost)}</div>
+                      <div className="text-[11px] text-muted-foreground">~{o.one_way_hours}h one way</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {trip.routeSummary.transport === "car" && trip.routeSummary.transportOptions?.local && (
+              <p className="text-[11px] text-muted-foreground mt-2.5">
+                Tip: tap “Make it cheaper” to switch to local/public transport.
+              </p>
+            )}
           </div>
         )}
 
@@ -1591,6 +1636,7 @@ export default function App() {
     const payload = {
       days: form.days, budget: form.budget, startCity: form.startCity,
       groupType: form.groupType, month: form.month, stayStyle: form.stayStyle,
+      transport: form.transport,
       vibe: form.vibes[0] || "Adventure",
       interests: [...form.vibes.slice(1).map(v => v.toLowerCase()), ...form.interests.map(i => i.toLowerCase())],
       exclude: form.exclude,

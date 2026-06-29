@@ -38,7 +38,9 @@ GROUP_SIZES = {            # group_type -> (people, hotel_rooms)
     "friends": (4, 2),
     "family": (4, 2),
 }
-DRIVE_RATE_PKR_PER_HOUR = (1200, 2500)  # fuel-only -> hired car with driver
+DRIVE_RATE_PKR_PER_HOUR = (1200, 2500)        # private car/jeep, per group, per drive-hour
+BUS_FARE_PKR_PER_HOUR_PER_PERSON = 350        # local/public transport, per person, per drive-hour
+LOCAL_SLOWER_FACTOR = 1.2                     # buses + transfers run slower than a private car
 MAX_DRIVE_HOURS_PER_DAY = 8
 # Where each accommodation tier sits within a destination's cost range.
 STYLE_POS = {"budget": 0.0, "standard": 0.5, "luxury": 1.0}
@@ -125,12 +127,13 @@ def _at(rng, pos):
     return lo + pos * (hi - lo)
 
 
-def estimate_cost(route, group_type, days, style="standard"):
-    """Estimate the trip cost at a chosen accommodation tier (budget/standard/luxury).
+def estimate_cost(route, group_type, days, style="standard", transport="car"):
+    """Estimate trip cost at a stay tier (budget/standard/luxury) and a transport mode.
 
-    The tier sets where in each destination's cost range hotels and food land
-    (budget=low, standard=mid, luxury=high). Local transport and fuel are tier-
-    independent (mid). Returns single PKR numbers with a per-component breakdown."""
+    Stay tier sets where hotels/food land in each destination's range. Transport mode:
+    'car' = private car/jeep (per group, faster); 'local' = public/bus (per person, a bit
+    slower, usually cheaper). Returns single PKR numbers, a per-component breakdown, and
+    BOTH transport options so the UI can show car vs local side by side."""
     if "error" in route:
         return {"error": "cannot cost an invalid route", "route_error": route["error"]}
 
@@ -141,29 +144,43 @@ def estimate_cost(route, group_type, days, style="standard"):
     people, rooms = GROUP_SIZES.get(group_type, (2, 1))
     nights = max(days - 1, 1)        # final day is the return leg
     pos = STYLE_POS.get(style, 0.5)
-    drive_h = route["est_round_trip_drive_hours"]
+    round_trip = route["est_round_trip_drive_hours"]
+    one_way = round_trip / 2
 
     hotel_per_night = _at(_avg_range(stops, "hotel_pkr_per_night"), pos)   # scales with tier
     food_per_day = _at(_avg_range(stops, "food_pkr_per_day"), pos)         # scales with tier
     local_lo, local_hi = _avg_range(stops, "local_transport_pkr_per_day")
     local_per_day = (local_lo + local_hi) / 2                              # tier-independent
-    fuel_rate = sum(DRIVE_RATE_PKR_PER_HOUR) / 2                           # tier-independent
 
     hotels = rooms * nights * hotel_per_night
     food = people * days * food_per_day
     local = days * local_per_day
-    fuel = drive_h * fuel_rate
-    total = hotels + food + local + fuel
+
+    # Two intercity-transport options (the long-haul to/from the north).
+    car_cost = round_trip * (sum(DRIVE_RATE_PKR_PER_HOUR) / 2)             # private car, per group
+    bus_cost = round_trip * BUS_FARE_PKR_PER_HOUR_PER_PERSON * people      # public/bus, per person
+    transport_options = {
+        "car": {"label": "Private car", "cost": int(round(car_cost)),
+                "one_way_hours": round(one_way, 1), "round_trip_hours": round(round_trip, 1)},
+        "local": {"label": "Local / public", "cost": int(round(bus_cost)),
+                  "one_way_hours": round(one_way * LOCAL_SLOWER_FACTOR, 1),
+                  "round_trip_hours": round(round_trip * LOCAL_SLOWER_FACTOR, 1)},
+    }
+    mode = transport if transport in transport_options else "car"
+    intercity = transport_options[mode]["cost"]
+    total = hotels + food + local + intercity
 
     return {
-        "style": style, "group_type": group_type, "people": people, "rooms": rooms,
-        "days": days, "nights": nights,
+        "style": style, "transport": mode, "group_type": group_type,
+        "people": people, "rooms": rooms, "days": days, "nights": nights,
         "hotel_per_night_pkr": int(round(hotel_per_night)),
+        "one_way_drive_hours": transport_options[mode]["one_way_hours"],
+        "transport_options": transport_options,
         "breakdown_pkr": {
             "hotels": int(round(hotels)),
             "food": int(round(food)),
             "local_transport": int(round(local)),
-            "fuel": int(round(fuel)),
+            "intercity_transport": intercity,
         },
         "total_pkr": int(round(total)),
     }
@@ -242,7 +259,10 @@ def _run(label, stop_ids, start_city, group_type, days, budget, month):
 
     print("Route:", " -> ".join(s["name"] for s in route["ordered_stops"]),
           f"| ~{route['est_round_trip_drive_hours']}h round-trip driving")
-    print(f"Cost:  {cost['total_pkr'][0]:,} - {cost['total_pkr'][1]:,} PKR  {cost['breakdown_pkr']}")
+    print(f"Cost:  {cost['total_pkr']:,} PKR ({cost['transport']})  {cost['breakdown_pkr']}")
+    opts = cost["transport_options"]
+    print(f"       car: {opts['car']['cost']:,} ({opts['car']['one_way_hours']}h one-way)  |  "
+          f"local: {opts['local']['cost']:,} ({opts['local']['one_way_hours']}h one-way)")
     verdict = "FEASIBLE" if feas["feasible"] else "NOT FEASIBLE"
     print(f"Verdict: {verdict}  (budget: {feas['budget']['status']})")
     for p in feas["problems"]:
