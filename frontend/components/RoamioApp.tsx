@@ -93,8 +93,9 @@ const SAMPLE_TRIP = {
         "Evening at Monal Restaurant with city views",
       ],
       estimatedCost: 18000,
-      highlight: "Monal Restaurant views",
-      season: "Year-round",
+      type: "stay" as "stay" | "travel",
+      driveHours: 0,
+      highlight: "Faisal Mosque at golden hour",
       notes: "Ease into the trip in the capital before the long drive north begins tomorrow.",
       sourceRefs: [] as string[],
     },
@@ -110,8 +111,9 @@ const SAMPLE_TRIP = {
         "Overnight in Naran guesthouse",
       ],
       estimatedCost: 22000,
+      type: "travel" as "stay" | "travel",
+      driveHours: 9,
       highlight: "Saif-ul-Muluk Lake",
-      season: "Jun – Sep",
       notes: "A long, scenic haul up the Kaghan Valley, ending at the alpine lake at dusk.",
       sourceRefs: [] as string[],
     },
@@ -127,8 +129,9 @@ const SAMPLE_TRIP = {
         "Local bazaar & dried apricot shopping",
       ],
       estimatedCost: 24000,
+      type: "stay" as "stay" | "travel",
+      driveHours: 0,
       highlight: "Attabad Lake boat ride",
-      season: "Apr – Oct",
       notes: "Karimabad, the capital of Hunza, offers an awe-inspiring view of Rakaposhi and the millennium-old Baltit Fort.",
       sourceRefs: ["S1", "S2"] as string[],
     },
@@ -144,8 +147,9 @@ const SAMPLE_TRIP = {
         "Skardu Fort ancient rock throne",
       ],
       estimatedCost: 26000,
+      type: "stay" as "stay" | "travel",
+      driveHours: 0,
       highlight: "Katpana Desert dunes",
-      season: "May – Sep",
       notes: "Skardu pairs turquoise lakes with the high-altitude Katpana cold desert on the Indus.",
       sourceRefs: [] as string[],
     },
@@ -161,8 +165,9 @@ const SAMPLE_TRIP = {
         "Depart with a lifetime of stories",
       ],
       estimatedCost: 22500,
-      highlight: "Aerial views of Karakoram",
-      season: "Year-round",
+      type: "travel" as "stay" | "travel",
+      driveHours: 0,
+      highlight: "",
       notes: "Fly back over the Karakoram if the weather holds, with a souvenir stop in Islamabad.",
       sourceRefs: [] as string[],
     },
@@ -266,10 +271,12 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
       destination: d.title,
       emoji: d.type === "travel" ? "🚗" : "🏔️",
       tagline: d.type === "travel" ? "On the road" : "Exploring",
-      activities: d.activities.length ? d.activities : [d.notes],
+      // Real activities only — the grounded note is shown on its own, never duplicated here.
+      activities: (d.activities || []) as string[],
       estimatedCost: perDay,
-      highlight: d.activities[0] || d.notes,
-      season: "",
+      type: (d.type === "travel" ? "travel" : "stay") as "stay" | "travel",
+      driveHours: d.drive_hours || 0,
+      highlight: (d.activities && d.activities[0]) || "",
       notes: d.notes || "",
       sourceRefs: (d.source_refs || []) as string[],
     })),
@@ -1668,19 +1675,24 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                             </h3>
                           </div>
                           <p className="text-xs text-muted-foreground mb-3">{day.tagline}</p>
-                          <div className="flex flex-wrap gap-2">
-                            <span
-                              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                              style={{ background: `${P.lightBlue}50`, color: "#2a7fa5" }}
-                            >
-                              <Sun size={9} /> {day.season}
-                            </span>
-                            <span
-                              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                              style={{ background: `${P.aquamarine}25`, color: P.hunterGreen }}
-                            >
-                              ⭐ {day.highlight}
-                            </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {day.type === "travel" && (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                                style={{ background: `${P.lightBlue}50`, color: "#2a7fa5" }}
+                              >
+                                <Navigation size={9} /> {day.driveHours > 0 ? `~${day.driveHours}h drive` : "Travel day"}
+                              </span>
+                            )}
+                            {day.highlight && (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full max-w-[220px]"
+                                style={{ background: `${P.aquamarine}25`, color: P.hunterGreen }}
+                              >
+                                <span className="flex-shrink-0">⭐</span>
+                                <span className="truncate">{day.highlight}</span>
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
@@ -1703,22 +1715,26 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
                         style={{ borderTop: "1px solid var(--border)" }}
                       >
                         {day.notes && (
-                          <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--muted-foreground)" }}>
+                          <p className="text-sm leading-relaxed mb-4 pl-3" style={{ color: "var(--muted-foreground)", borderLeft: `2px solid ${P.fern}33` }}>
                             {day.notes}
                           </p>
                         )}
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Activities</p>
-                        <ul className="space-y-2">
-                          {day.activities.map((act, i) => (
-                            <li key={i} className="flex items-start gap-2.5">
-                              <div
-                                className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2"
-                                style={{ background: P.aquamarine }}
-                              />
-                              <span className="text-sm text-foreground leading-relaxed">{act}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        {day.activities.length > 0 && (
+                          <>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Things to do</p>
+                            <ul className="space-y-2">
+                              {day.activities.map((act, i) => (
+                                <li key={i} className="flex items-start gap-2.5">
+                                  <div
+                                    className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2"
+                                    style={{ background: P.aquamarine }}
+                                  />
+                                  <span className="text-sm text-foreground leading-relaxed">{act}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
 
                         {/* Per-day grounding — which real sources this day was written from */}
                         {day.sourceRefs && day.sourceRefs.length > 0 && (
