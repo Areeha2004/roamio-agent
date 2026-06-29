@@ -264,6 +264,11 @@ const STAY_STYLES = [
   { value: "luxury" as const, label: "Luxury", hint: "~PKR 12–18k/night" },
 ];
 
+const TRANSPORT_MODES = [
+  { value: "car" as const, label: "Private car", hint: "Faster, per group" },
+  { value: "local" as const, label: "Local / public", hint: "Cheaper, by bus" },
+];
+
 const INTERESTS = ["Lakes", "Trekking", "Waterfalls", "Forests", "Glaciers", "Desert", "Camping", "Culture", "Heritage", "Festivals", "Off-the-beaten-path", "Wildlife"];
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
@@ -877,6 +882,30 @@ function PlannerPage({ onSubmit }: { onSubmit: (form: PlanForm) => void }) {
                   }}
                 >
                   <span className="text-sm font-semibold" style={{ color: form.stayStyle === value ? P.hunterGreen : "var(--foreground)", fontFamily: "Sora, sans-serif" }}>{label}</span>
+                  <span className="text-[10px] text-muted-foreground">{hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Transport (optional) */}
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <label className="block text-sm font-semibold text-foreground mb-1" style={{ fontFamily: "Sora, sans-serif" }}>
+              How will you get around? <span className="text-xs font-normal text-muted-foreground">· optional</span>
+            </label>
+            <p className="text-xs text-muted-foreground mb-4">Both are costed either way. If your trip runs over budget, Roamio will try local transport before trimming the plan.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {TRANSPORT_MODES.map(({ value, label, hint }) => (
+                <button
+                  key={value}
+                  onClick={() => setForm(f => ({ ...f, transport: value }))}
+                  className="flex flex-col items-start gap-1 px-3 py-3 rounded-xl border-2 text-left transition-all duration-150"
+                  style={{
+                    borderColor: form.transport === value ? P.fern : "var(--border)",
+                    background: form.transport === value ? `${P.fern}12` : "var(--muted)",
+                  }}
+                >
+                  <span className="text-sm font-semibold" style={{ color: form.transport === value ? P.hunterGreen : "var(--foreground)", fontFamily: "Sora, sans-serif" }}>{label}</span>
                   <span className="text-[10px] text-muted-foreground">{hint}</span>
                 </button>
               ))}
