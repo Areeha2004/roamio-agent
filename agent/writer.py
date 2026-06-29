@@ -128,6 +128,17 @@ def _build_tips(route):
     return tips
 
 
+def _season_summary(route):
+    """Season info for the primary (hero) destination: when to go, what's good then,
+    and when to avoid. The UI shows highlights for an in-season trip and the avoid note
+    only when the timing is off — so we never tell a July traveller about winter snow."""
+    if not route["ordered_stops"]:
+        return {}
+    bs = _corpus[route["ordered_stops"][-1]["id"]].get("best_season", {})
+    return {"months": bs.get("months", ""), "highlights": bs.get("highlights", ""),
+            "avoid": bs.get("avoid", "")}
+
+
 def _build_route_summary(route, cost):
     """Grounded route legs (from / to / hours / via) + one-way and round-trip hours,
     the chosen transport mode, and both transport options (car vs local) so the UI can
@@ -188,6 +199,7 @@ def write_itinerary(request, route, cost, feasibility):
             "hero_image": _corpus.get(primary, {}).get("image", "") if primary else "",
             "total_cost_pkr": cost["total_pkr"],
             "total_drive_hours": route["est_round_trip_drive_hours"],
+            "season": _season_summary(route),
             "headline": draft.headline,
         },
         "warnings": _build_warnings(route),

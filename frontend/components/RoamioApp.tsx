@@ -180,8 +180,14 @@ export function adaptItinerary(api: any): typeof SAMPLE_TRIP {
     localTransport: cb.local_transport,
     travel: cb.intercity_transport,
     stayStyle: cap(req.style || "standard"),
-    bestSeason: api.summary.feasible ? "In season for your dates" : "Check seasonal access",
-    currentSeasonWarning: (warn("season")?.text || warn("info")?.text || ""),
+    // Season banner: when the dates are in season, show what's GOOD then (highlights);
+    // only show the "avoid" note when the timing is actually off — never both.
+    bestSeason: api.summary.season?.months
+      ? (api.summary.feasible ? `In season — best ${api.summary.season.months}` : `Best window: ${api.summary.season.months}`)
+      : (api.summary.feasible ? "In season for your dates" : "Check seasonal access"),
+    currentSeasonWarning: api.summary.feasible
+      ? (api.summary.season?.highlights || "")
+      : (api.summary.season?.avoid || warn("season")?.text || warn("info")?.text || ""),
     liveConditions: api.warnings.filter((w: any) => w.type === "live").map((w: any) => w.text),
     permitRequired: !!permit,
     permitNote: permit?.text || "",
@@ -1388,9 +1394,11 @@ export function ItineraryPage({ trip, onTweak, onShare, onNewTrip }: { trip: typ
           <Sun size={17} style={{ color: "#2a7fa5", flexShrink: 0, marginTop: 2 }} />
           <div>
             <p className="text-sm font-semibold mb-0.5" style={{ color: "#1a5f7a" }}>
-              Best season: {trip.bestSeason}
+              {trip.bestSeason}
             </p>
-            <p className="text-xs leading-relaxed" style={{ color: "#2a7fa5" }}>{trip.currentSeasonWarning}</p>
+            {trip.currentSeasonWarning && (
+              <p className="text-xs leading-relaxed" style={{ color: "#2a7fa5" }}>{trip.currentSeasonWarning}</p>
+            )}
           </div>
         </div>
 
