@@ -1,0 +1,27 @@
+name: Docker build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t roamio-api .
+
+      # The app constructs its OpenAI clients at import time, so it needs a key to boot.
+      # /health makes no API calls, so a dummy value is enough for a smoke test.
+      - name: Start container
+        run: docker run -d --name roamio -p 8000:8000 -e OPENAI_API_KEY=sk-ci-dummy roamio-api
+
+      - name: Smoke test /health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/health; then echo; exit 0; fi
+            sleep 1
+          done
+          echo "Container never became healthy"; docker logs roamio; exit 1
