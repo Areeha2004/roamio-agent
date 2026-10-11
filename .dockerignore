@@ -1,0 +1,14 @@
+# Keep secrets, local state and non-backend code out of the build context.
+.env
+.git
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+chroma/
+frontend/
+practice/
+samples/
+evals/
+check_keys.py
+*.md
