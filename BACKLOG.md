@@ -60,3 +60,9 @@ The post-v0 plan (agreed 2026-06-25) is now **complete**:
   being actively iterated again (today's lean harness is enough for a frozen v1).
 - **Free-tier hardening** — if the backend hits Render's 512 MB limit, slim `chromadb`
   → in-memory cosine search.
+- **Exit the re-plan loop on a no-op** — found by `evals/benchmark.py` (Oct 2026): when the
+  only stop is the user's pinned focus (e.g. Skardu in 2 days), `replan_node` can't change
+  anything but `decide` still loops to `MAX_REPLANS`. Harmless (milliseconds) but wasted work;
+  route straight to `conditions` when a re-plan leaves `stops` unchanged.
+- **Lazy LLM clients** — the OpenAI clients are built at import time, so the app can't boot
+  (even for `/health`) without a key; tests and CI pass a dummy one. Build them on first use.
