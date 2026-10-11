@@ -1,5 +1,8 @@
 # Roamio — AI trip planner for Northern Pakistan
 
+[![Tests](https://github.com/Areeha2004/roamio-agent/actions/workflows/tests.yml/badge.svg)](https://github.com/Areeha2004/roamio-agent/actions/workflows/tests.yml)
+[![Docker build](https://github.com/Areeha2004/roamio-agent/actions/workflows/docker.yml/badge.svg)](https://github.com/Areeha2004/roamio-agent/actions/workflows/docker.yml)
+
 > *"Tell it your days, budget and vibe — get a full day-by-day Pakistan trip plan in seconds."*
 
 Roamio turns a few constraints (days, budget, start city, group, vibe, month) into a
@@ -93,6 +96,38 @@ Next.js form  →  FastAPI POST /generate-itinerary/stream  →  LangGraph agent
 
 ---
 
+## Measured performance
+
+Benchmark of 10 varied trip requests through the full pipeline (real LLM + web calls) —
+`python evals/benchmark.py`, raw results in [`evals/benchmark_results.json`](evals/benchmark_results.json).
+Measured 11 Oct 2026, local machine, warm index.
+
+| Metric | Result |
+|---|---|
+| Median latency (end to end) | **14.3 s** · max 19.2 s |
+| Where the time goes (median) | writer **8.4 s** · live conditions 3.1 s · retrieval 0.6 s · planning < 0.01 s |
+| LLM calls per itinerary | 3 (conditions summary · writer · faithfulness judge) |
+| Tokens per itinerary | ~4,500 |
+| **Cost per itinerary** | **~$0.001** (gpt-4o-mini; embeddings excluded) |
+| Faithfulness (judge-verified notes) | **21/23 (91%)** |
+| Failures | 0/10 |
+| Runs that needed re-planning | 3/10 — 2 hit the cap and honestly returned *infeasible* |
+| Deterministic tests | 27/27 passing in CI |
+
+**What the numbers say:** the deterministic planner is effectively free — about 60% of the
+time is the LLM writing prose, so that's where latency work would go (streaming the writer,
+or a smaller draft). Two requests that can't be satisfied (Karachi start in 7 days; a pinned
+Skardu in 2 days) ran the re-plan loop to its cap of 6 and returned an honest
+"not feasible" instead of a fake plan; the pinned case can't change anything, so it should
+exit after the first no-op re-plan — logged in the backlog.
+
+**In production** every request emits one JSON log line (`request_id`, path, status,
+latency) and every itinerary emits another (per-node timing, re-plans, LLM calls, tokens,
+cost, faithfulness, outcome). The request id is returned as `X-Request-ID`, so a
+user-reported failure can be traced in the logs.
+
+---
+
 ## What's in the repo
 
 ```
@@ -118,8 +153,11 @@ db/
   store.py          Supabase save_trip / get_trip (graceful if unconfigured)
 api/
   main.py           FastAPI: /generate-itinerary(/stream), /interpret-tweak, /share, /trip/{id}
+  telemetry.py      structured JSON logs + per-itinerary usage/cost tracking
 evals/
   run.py            lean harness: deterministic planning checks + opt-in E2E (`--e2e`)
+  benchmark.py      latency / cost / faithfulness benchmark (real API calls)
+tests/              pytest suite — planning math, agent control flow, API, telemetry
 frontend/           Next.js app (planner form + itinerary + shareable page)
 DECISIONS.md        engineering decision log (the reasoning behind key choices)
 BACKLOG.md          consciously deferred work + the post-v0 roadmap
@@ -156,10 +194,12 @@ destination index re-embeds `corpus.json`; the content index embeds the committe
 > Without Supabase/Tavily configured, the app still runs — sharing and live-conditions just
 > degrade gracefully.
 
-**Evals** (optional):
+**Tests and evals:**
 ```bash
-python evals/run.py            # deterministic planning checks — fast, no LLM/$$
-python evals/run.py --e2e      # + a small full-pipeline pass (real LLM + web calls)
+pip install -r requirements-dev.txt
+pytest                         # 27 tests — no API keys, no LLM calls (also runs in CI)
+python evals/run.py --e2e      # small full-pipeline pass (real LLM + web calls)
+python evals/benchmark.py      # latency / cost / faithfulness over 10 trips (~$0.01)
 ```
 
 > To refresh the grounding content from the web, re-run `python corpus/ingest_content.py`

@@ -253,9 +253,10 @@ def _build_graph():
 graph = _build_graph()
 
 
-def generate_itinerary(request: dict) -> dict:
-    """Run the planning graph end-to-end and return the itinerary JSON."""
-    final = graph.invoke({"request": request})
+def generate_itinerary(request: dict, config: dict | None = None) -> dict:
+    """Run the planning graph end-to-end and return the itinerary JSON.
+    `config` is passed to LangGraph — e.g. {"callbacks": [UsageTracker()]} for metrics."""
+    final = graph.invoke({"request": request}, config=config)
     return final["itinerary"]
 
 

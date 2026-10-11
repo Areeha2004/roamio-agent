@@ -1,0 +1,374 @@
+{
+  "summary": {
+    "date": "2026-10-11",
+    "runs": 10,
+    "failures": 0,
+    "median_latency_s": 14.3,
+    "max_latency_s": 19.2,
+    "median_node_s": {
+      "search": 0.6,
+      "plan": 0.0,
+      "conditions": 3.1,
+      "write": 8.4,
+      "replan": 0.0
+    },
+    "avg_llm_calls": 3,
+    "avg_tokens": 4481,
+    "avg_cost_usd": 0.001,
+    "runs_with_replan": 3,
+    "faithfulness": "21/23 (91%)"
+  },
+  "runs": [
+    {
+      "request": {
+        "days": 5,
+        "budget_pkr": 200000,
+        "start_city": "Islamabad",
+        "group_type": "couple",
+        "vibe": "adventure",
+        "interests": [],
+        "month": 7,
+        "transport": "car",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 14396,
+      "node_ms": {
+        "search": 977,
+        "plan": 1,
+        "conditions": 4555,
+        "write": 8862
+      },
+      "replans": 0,
+      "llm_calls": 3,
+      "input_tokens": 3560,
+      "output_tokens": 749,
+      "cost_usd": 0.000983,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "naran-kaghan"
+      ],
+      "faithfulness_checked": 2,
+      "faithfulness_verified": 2
+    },
+    {
+      "request": {
+        "days": 3,
+        "budget_pkr": 90000,
+        "start_city": "Islamabad",
+        "group_type": "family",
+        "vibe": "chill",
+        "interests": [],
+        "month": 7,
+        "transport": "car",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 9946,
+      "node_ms": {
+        "search": 1019,
+        "plan": 2,
+        "conditions": 3079,
+        "write": 5845
+      },
+      "replans": 0,
+      "llm_calls": 3,
+      "input_tokens": 2724,
+      "output_tokens": 506,
+      "cost_usd": 0.000712,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "murree-galiyat"
+      ],
+      "faithfulness_checked": 1,
+      "faithfulness_verified": 1
+    },
+    {
+      "request": {
+        "days": 8,
+        "budget_pkr": 450000,
+        "start_city": "Islamabad",
+        "group_type": "couple",
+        "vibe": "adventure",
+        "interests": [
+          "lakes",
+          "trekking"
+        ],
+        "month": 7,
+        "transport": "car",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 19249,
+      "node_ms": {
+        "search": 323,
+        "plan": 1,
+        "conditions": 5458,
+        "write": 13467
+      },
+      "replans": 0,
+      "llm_calls": 3,
+      "input_tokens": 5421,
+      "output_tokens": 1248,
+      "cost_usd": 0.001562,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "skardu",
+        "astore-valley"
+      ],
+      "faithfulness_checked": 4,
+      "faithfulness_verified": 3
+    },
+    {
+      "request": {
+        "days": 6,
+        "budget_pkr": 600000,
+        "start_city": "Islamabad",
+        "group_type": "couple",
+        "vibe": "adventure",
+        "interests": [],
+        "month": 7,
+        "transport": "car",
+        "style": "luxury",
+        "prefer": "hunza-valley",
+        "exclude": []
+      },
+      "total_ms": 16920,
+      "node_ms": {
+        "search": 396,
+        "plan": 1,
+        "replan": 0,
+        "conditions": 3105,
+        "write": 13418
+      },
+      "replans": 1,
+      "llm_calls": 3,
+      "input_tokens": 4008,
+      "output_tokens": 1017,
+      "cost_usd": 0.001211,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "hunza-valley"
+      ],
+      "faithfulness_checked": 3,
+      "faithfulness_verified": 2
+    },
+    {
+      "request": {
+        "days": 6,
+        "budget_pkr": 200000,
+        "start_city": "Islamabad",
+        "group_type": "couple",
+        "vibe": "heritage",
+        "interests": [
+          "culture",
+          "heritage"
+        ],
+        "month": 9,
+        "transport": "car",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 15286,
+      "node_ms": {
+        "search": 382,
+        "plan": 3,
+        "conditions": 4422,
+        "write": 10479
+      },
+      "replans": 0,
+      "llm_calls": 3,
+      "input_tokens": 4290,
+      "output_tokens": 956,
+      "cost_usd": 0.001217,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "kalash-valleys",
+        "khaplu"
+      ],
+      "faithfulness_checked": 3,
+      "faithfulness_verified": 3
+    },
+    {
+      "request": {
+        "days": 5,
+        "budget_pkr": 200000,
+        "start_city": "Lahore",
+        "group_type": "friends",
+        "vibe": "scenic",
+        "interests": [],
+        "month": 7,
+        "transport": "car",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 14191,
+      "node_ms": {
+        "search": 737,
+        "plan": 1,
+        "conditions": 5488,
+        "write": 7965
+      },
+      "replans": 0,
+      "llm_calls": 3,
+      "input_tokens": 3623,
+      "output_tokens": 726,
+      "cost_usd": 0.000979,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "naran-kaghan"
+      ],
+      "faithfulness_checked": 2,
+      "faithfulness_verified": 2
+    },
+    {
+      "request": {
+        "days": 7,
+        "budget_pkr": 350000,
+        "start_city": "Karachi",
+        "group_type": "couple",
+        "vibe": "adventure",
+        "interests": [],
+        "month": 7,
+        "transport": "car",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 14986,
+      "node_ms": {
+        "search": 716,
+        "plan": 7,
+        "replan": 6,
+        "conditions": 2962,
+        "write": 11298
+      },
+      "replans": 6,
+      "llm_calls": 3,
+      "input_tokens": 4207,
+      "output_tokens": 1020,
+      "cost_usd": 0.001243,
+      "outcome": "ok",
+      "feasible": false,
+      "destinations": [
+        "naran-kaghan"
+      ],
+      "faithfulness_checked": 3,
+      "faithfulness_verified": 3
+    },
+    {
+      "request": {
+        "days": 4,
+        "budget_pkr": 40000,
+        "start_city": "Islamabad",
+        "group_type": "couple",
+        "vibe": "chill",
+        "interests": [],
+        "month": 7,
+        "transport": "local",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 11497,
+      "node_ms": {
+        "search": 595,
+        "plan": 1,
+        "conditions": 3039,
+        "write": 7862
+      },
+      "replans": 0,
+      "llm_calls": 3,
+      "input_tokens": 3238,
+      "output_tokens": 662,
+      "cost_usd": 0.000883,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "murree-galiyat"
+      ],
+      "faithfulness_checked": 2,
+      "faithfulness_verified": 2
+    },
+    {
+      "request": {
+        "days": 5,
+        "budget_pkr": 200000,
+        "start_city": "Islamabad",
+        "group_type": "couple",
+        "vibe": "adventure",
+        "interests": [],
+        "month": 1,
+        "transport": "car",
+        "style": "standard",
+        "prefer": null,
+        "exclude": []
+      },
+      "total_ms": 11247,
+      "node_ms": {
+        "search": 597,
+        "plan": 1,
+        "conditions": 2673,
+        "write": 7976
+      },
+      "replans": 0,
+      "llm_calls": 3,
+      "input_tokens": 2695,
+      "output_tokens": 755,
+      "cost_usd": 0.000857,
+      "outcome": "ok",
+      "feasible": true,
+      "destinations": [
+        "murree-galiyat"
+      ],
+      "faithfulness_checked": 2,
+      "faithfulness_verified": 2
+    },
+    {
+      "request": {
+        "days": 2,
+        "budget_pkr": 300000,
+        "start_city": "Islamabad",
+        "group_type": "couple",
+        "vibe": "adventure",
+        "interests": [],
+        "month": 7,
+        "transport": "car",
+        "style": "standard",
+        "prefer": "skardu",
+        "exclude": []
+      },
+      "total_ms": 9531,
+      "node_ms": {
+        "search": 639,
+        "plan": 4,
+        "replan": 3,
+        "conditions": 3101,
+        "write": 5783
+      },
+      "replans": 6,
+      "llm_calls": 3,
+      "input_tokens": 2958,
+      "output_tokens": 450,
+      "cost_usd": 0.000714,
+      "outcome": "ok",
+      "feasible": false,
+      "destinations": [
+        "skardu"
+      ],
+      "faithfulness_checked": 1,
+      "faithfulness_verified": 1
+    }
+  ]
+}

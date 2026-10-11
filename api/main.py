@@ -15,9 +15,11 @@ Run:  ./venv/Scripts/python.exe -m uvicorn api.main:app --reload --port 8000
 import json
 import os
 import sys
+import time
+import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -28,6 +30,7 @@ sys.path.insert(0, str(ROOT / "db"))
 from orchestrator import generate_itinerary, graph  # noqa: E402
 from tweak import interpret_tweak  # noqa: E402
 from store import save_trip, get_trip  # noqa: E402
+from api.telemetry import UsageTracker, itinerary_fields, log_event  # noqa: E402
 
 app = FastAPI(title="Roamio API", version="0.1.0")
 
@@ -46,7 +49,29 @@ app.add_middleware(
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
+
+
+@app.middleware("http")
+async def request_log(request: Request, call_next):
+    """One structured log line per request, tagged with a request id that is also returned
+    in the X-Request-ID header — so a user-reported failure can be found in the logs.
+    For the streaming endpoint this times the response *start*; the full generation is
+    logged separately as an "itinerary" event."""
+    request_id = request.headers.get("x-request-id") or uuid.uuid4().hex[:12]
+    request.state.request_id = request_id
+    start = time.perf_counter()
+    status = 500
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        response.headers["X-Request-ID"] = request_id
+        return response
+    finally:
+        log_event("request", request_id=request_id, method=request.method,
+                  path=request.url.path, status=status,
+                  latency_ms=round((time.perf_counter() - start) * 1000))
 
 
 class PlanRequest(BaseModel):
@@ -109,14 +134,20 @@ def _to_request(req: PlanRequest) -> dict:
 
 
 @app.post("/generate-itinerary")
-def generate(req: PlanRequest):
+def generate(req: PlanRequest, http: Request):
     """Non-streaming: returns the full itinerary in one response.
     Nothing is persisted here — a trip is only saved when the user shares it (POST /share)."""
     request = _to_request(req)
+    usage, start = UsageTracker(), time.perf_counter()
     try:
-        result = generate_itinerary(request)
+        result = generate_itinerary(request, config={"callbacks": [usage]})
     except Exception as e:  # surface unexpected failures as 500s, not silent hangs
+        log_event("itinerary", request_id=http.state.request_id, outcome="error", error=str(e),
+                  total_ms=round((time.perf_counter() - start) * 1000), **usage.as_dict())
         raise HTTPException(status_code=500, detail=f"itinerary generation failed: {e}")
+    log_event("itinerary", request_id=http.state.request_id,
+              total_ms=round((time.perf_counter() - start) * 1000),
+              **usage.as_dict(), **itinerary_fields(result))
     if isinstance(result, dict) and "error" in result:
         raise HTTPException(status_code=400, detail=result)  # e.g. unsupported start city
     return result
@@ -133,16 +164,25 @@ _NODE_LABELS = {
 
 
 @app.post("/generate-itinerary/stream")
-def generate_stream(req: PlanRequest):
+def generate_stream(req: PlanRequest, http: Request):
     """Stream graph progress as newline-delimited JSON, then the final itinerary.
     Events: {"type":"progress","label":...} per node, then {"type":"result","itinerary":...}."""
     request = _to_request(req)
+    request_id = http.state.request_id
 
     def gen():
         itinerary = None
+        usage, start = UsageTracker(), time.perf_counter()
+        node_ms, replans, error = {}, 0, None  # time per node, summed across re-plan loops
+        last = start
         try:
-            for chunk in graph.stream({"request": request}, stream_mode="updates"):
+            for chunk in graph.stream({"request": request}, stream_mode="updates",
+                                      config={"callbacks": [usage]}):
+                now = time.perf_counter()
+                elapsed, last = round((now - last) * 1000), now
                 for node, update in chunk.items():
+                    node_ms[node] = node_ms.get(node, 0) + elapsed
+                    replans += node == "replan"
                     yield json.dumps({"type": "progress", "node": node,
                                       "label": _NODE_LABELS.get(node, "Working…")}) + "\n"
                     if isinstance(update, dict) and update.get("itinerary") is not None:
@@ -153,7 +193,13 @@ def generate_stream(req: PlanRequest):
             else:
                 yield json.dumps({"type": "error", "detail": itinerary or "no itinerary produced"}) + "\n"
         except Exception as e:
+            error = str(e)
             yield json.dumps({"type": "error", "detail": str(e)}) + "\n"
+        finally:
+            fields = itinerary_fields(itinerary) if error is None else {"outcome": "error", "error": error}
+            log_event("itinerary", request_id=request_id,
+                      total_ms=round((time.perf_counter() - start) * 1000),
+                      node_ms=node_ms, replans=replans, **usage.as_dict(), **fields)
 
     return StreamingResponse(
         gen(),
