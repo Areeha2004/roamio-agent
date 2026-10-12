@@ -40,7 +40,10 @@ _DEFAULT_ORIGINS = [
     "http://localhost:3000", "http://127.0.0.1:3000",
     "http://localhost:5173", "http://127.0.0.1:5173",
 ]
-_env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+# Trailing slashes are stripped: browsers send Origin without one, so "https://x.app/" in the
+# env var would silently match nothing — the API keeps working from curl while every browser
+# call fails CORS. Be forgiving about the config instead.
+_env_origins = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_env_origins or _DEFAULT_ORIGINS,
