@@ -25,3 +25,13 @@ jobs:
             sleep 1
           done
           echo "Container never became healthy"; docker logs roamio; exit 1
+
+      # Render's free tier caps a service at 512 MB — these numbers say whether it fits.
+      # Memory here is the idle footprint after import; the Chroma index builds lazily on
+      # the first itinerary request, so real usage is higher.
+      - name: Report image size and idle memory
+        run: |
+          echo "image size:  $(docker images roamio-api --format '{{.Size}}')"
+          echo "idle memory: $(docker stats --no-stream --format '{{.MemUsage}}' roamio)"
+          echo "--- largest packages (MB) ---"
+          docker exec roamio sh -c 'du -sm /usr/local/lib/python3.12/site-packages/* 2>/dev/null | sort -rn | head -12'
