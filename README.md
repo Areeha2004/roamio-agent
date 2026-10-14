@@ -112,7 +112,7 @@ Measured 11 Oct 2026, local machine, warm index.
 | Faithfulness (judge-verified notes) | **21/23 (91%)** |
 | Failures | 0/10 |
 | Runs that needed re-planning | 3/10 — 2 hit the cap and honestly returned *infeasible* |
-| Deterministic tests | 27/27 passing in CI |
+| Deterministic tests | 41/41 passing in CI |
 
 **What the numbers say:** the deterministic planner is effectively free — about 60% of the
 time is the LLM writing prose, so that's where latency work would go (streaming the writer,
@@ -154,6 +154,9 @@ db/
 api/
   main.py           FastAPI: /generate-itinerary(/stream), /interpret-tweak, /share, /trip/{id}
   telemetry.py      structured JSON logs + per-itinerary usage/cost tracking
+mcp_server/
+  server.py         MCP server — the planning tools as typed tools for any MCP client
+  smoke_test.py     spawns the server and calls it as a real client would
 evals/
   run.py            lean harness: deterministic planning checks + opt-in E2E (`--e2e`)
   benchmark.py      latency / cost / faithfulness benchmark (real API calls)
@@ -197,7 +200,7 @@ destination index re-embeds `corpus.json`; the content index embeds the committe
 **Tests and evals:**
 ```bash
 pip install -r requirements-dev.txt
-pytest                         # 27 tests — no API keys, no LLM calls (also runs in CI)
+pytest                         # 41 tests — no API keys, no LLM calls (also runs in CI)
 python evals/run.py --e2e      # small full-pipeline pass (real LLM + web calls)
 python evals/benchmark.py      # latency / cost / faithfulness over 10 trips (~$0.01)
 ```
@@ -205,6 +208,45 @@ python evals/benchmark.py      # latency / cost / faithfulness over 10 trips (~$
 > To refresh the grounding content from the web, re-run `python corpus/ingest_content.py`
 > then `python rag/content.py --rebuild`. The cached `corpus/content/` is committed, so this
 > is only needed when you add destinations or want fresher sources.
+
+---
+
+## MCP server
+
+Roamio's planning tools are also exposed over the **Model Context Protocol**, so any MCP
+client — Claude Desktop, the MCP Inspector, your own agent — can plan a trip with them.
+
+| Tool | Does |
+|---|---|
+| `list_origin_cities` | The 24 supported start cities; northern ones flagged as upper-bound estimates |
+| `search_destinations` | Semantic search over the corpus + the tag re-rank (ADR 010) |
+| `get_destination` | Curated detail: season, costs, permits, activities, tips |
+| `build_route` | Hub-composed routing with round-trip drive hours |
+| `plan_trip` | Route + cost + feasibility in one verdict |
+
+```bash
+pip install -r requirements-dev.txt
+python mcp_server/server.py                      # stdio
+python mcp_server/smoke_test.py                  # list the tools, call one
+npx @modelcontextprotocol/inspector python mcp_server/server.py
+```
+
+Claude Desktop (`claude_desktop_config.json`):
+```json
+{ "mcpServers": { "roamio": {
+    "command": "/abs/path/to/roamio-agent/venv/Scripts/python.exe",
+    "args": ["/abs/path/to/roamio-agent/mcp_server/server.py"],
+    "env": { "OPENAI_API_KEY": "sk-..." } } } }
+```
+
+> **What's deliberately *not* exposed:** the itinerary writer, the faithfulness judge and the
+> tweak parser. Those take ~8s, cost money per call and are non-deterministic. MCP tools
+> should be cheap, fast and safe to call repeatedly, so the server is the deterministic half
+> of Roamio plus retrieval. Each tool also takes plain scalars rather than the internal route
+> object — recomposing the route costs microseconds and keeps the interface clean.
+>
+> The SDK lives in `requirements-dev.txt`, not `requirements.txt`: the API never imports it,
+> so it stays out of the container.
 
 ---
 
