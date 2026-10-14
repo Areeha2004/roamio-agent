@@ -10,5 +10,6 @@ frontend/
 practice/
 samples/
 evals/
+mcp_server/
 check_keys.py
 *.md

@@ -71,3 +71,6 @@ The post-v0 plan (agreed 2026-06-25) is now **complete**:
   with OpenAI; `kubernetes` (83 MB) is Chroma's cluster client config. Idle memory is only
   133 MB, so this is build/pull time rather than a runtime problem — fix it alongside the
   in-memory-cosine swap above, not before.
+- **MCP server: add the itinerary writer as a tool** — deliberately excluded for now (slow,
+  paid, non-deterministic). If it's added it should be a separate long-running tool with the
+  cost stated in its description, not sitting alongside the free deterministic ones.
