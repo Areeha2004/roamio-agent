@@ -425,7 +425,7 @@ type Featured = {
 const FEATURED: Featured[] = [
   { id: "hunza-valley", name: "Hunza Valley", region: "Gilgit-Baltistan", season: "Apr – Oct", days: "5–6 days",
     highlight: "Blossoms, ancient forts & the Karakoram",
-    image: "https://adventurertreks.pk/wp-content/uploads/2024/04/Best-Months-to-Visit-Hunza-Valley.webp",
+    image: "https://ak-d.tripcdn.com/images/1mi03224x99vcicv175F5_R_600_400_R5_Q90.jpg?proc=source/trip",
     vibe: "Photography", interests: ["Culture", "Heritage"], idealDays: 6, budget: 180000, focal: "center 62%" },
   { id: "skardu", name: "Skardu", region: "Gilgit-Baltistan", season: "Apr – Oct", days: "3–6 days",
     highlight: "Alpine lakes & high-altitude cold deserts",
